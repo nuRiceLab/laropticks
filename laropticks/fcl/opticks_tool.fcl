@@ -1,0 +1,10 @@
+// Opticks propagation tool
+
+BEGIN_PROLOG
+
+Opticks:
+{
+    tool_type: Opticks
+}
+
+END_PROLOG
