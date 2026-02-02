@@ -1,5 +1,6 @@
 
-#include "../include/OpticksInterface.h"
+
+#include "laropticks/include/OpticksInterface.h"
 
 
 #include "lardataobj/Simulation/OpDetBacktrackerRecord.h"
@@ -14,6 +15,8 @@
 #include "U4SensorIdentifier.h"
 #include "SEvt.hh"
 #include "U4.hh"
+#include "SEventConfig.hh"
+#include "OPTICKS_LOG.hh"
 
 #include "fhiclcpp/ParameterSet.h"
 
@@ -23,27 +26,31 @@ namespace phot{
     OpticksInterface::OpticksInterface( fhicl::ParameterSet const &config) : IOpticalPropagation()
  																		  ,OpticksSensorIdentifier(nullptr)
  																		  ,OpticksHits(nullptr)
-{
-      mf::LogInfo("OpticksInterface::init") << "Initializing OpticksInterface";
-      std::cout << "Hello Opticks" <<std::endl;
-	}
-
+    {}
 
 	OpticksInterface::~OpticksInterface()=default;
 
-  void OpticksInterface::init(){
 
-      mf::LogInfo("OpticksInterface::init") << "Initializing OpticksInterface";
+// Initialize Opticks and Its Libraries
+  void OpticksInterface::init(){
+  	  // Initialize Opticks Logs for Information and Debugging
+	  std::cout << "--- Initiation OpticksInterface ----" << std::endl;
+	  mf::LogInfo("OpticksInterface::init") << "Initializing OpticksInterface";
+      int argc = 0; char** argv = nullptr;
+      OPTICKS_LOG(argc, argv);
+      cudaDeviceSynchronize();
+  	  SEventConfig::Initialize();
+
+/*
       // Initialize
       DetectorIds = GetPhotonDetectors();
 	  OpticksSensorIdentifier = new MySensorIdentifier(DetectorIds);
       OpticksHits = OpticksHitHandler::getInstance();
 
-
       // Set Geometry
       G4CXOpticks::SetSensorIdentifier(OpticksSensorIdentifier);
       G4CXOpticks::SetGeometryFromGDML();
-
+*/
   }
 
 
@@ -54,11 +61,10 @@ namespace phot{
 /*
       U4::CollectGenstep_DsG4Scintillation_r4695(&aTrack, &aStep, Num, scnt, ScintillationTime);
 
-
       int CollectedPhotons=SEvt::GetNumPhotonCollected(0);
       int maxPhoton=SEventConfig::MaxPhoton();
 
-      if(CollectedPhotons>=(maxPhoton*0.97)){
+      if(CollectedPhotons>=(maxPhoton)){
 
 
       }
@@ -137,7 +143,6 @@ namespace phot{
  }
 
 
-
 	//-------------------------------------------------------------------------//
 	/*!
 	* Initalize fast simulation.
@@ -145,7 +150,8 @@ namespace phot{
 	void OpticksInterface::beginJob()
 	{
         std::cout <<"----- Hello Opticks Here Begin Job ------ " << std::endl;
-        mf::LogError("OpticksInterface") << "Not implemented";
+        //mf::LogInfo("OpticksInterface") << "Not implemented";
+  		init();
 	}
 
 	//-------------------------------------------------------------------------//
@@ -154,7 +160,7 @@ namespace phot{
 	*/
 	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(VecSED const& edeps)
 	{
-        mf::LogError("OpticksInterface") << "Not implemented";
+        mf::LogInfo("OpticksInterface") << "Not implemented";
 		return {};
 	}
 
@@ -165,7 +171,7 @@ namespace phot{
 	void OpticksInterface::endJob()
 	{
         std::cout <<"----- Hello Opticks Here End Job ------ " << std::endl;
-		mf::LogError("OpticksInterface") << "Not implemented (Hello From Opticks)";
+		mf::LogInfo("OpticksInterface") << "Not implemented (Hello From Opticks)";
 	}
 
 	void phot::OpticksInterface::InitializeTools( CLHEP::HepRandomEngine& poisson, CLHEP::HepRandomEngine& scint_time) 	{

@@ -15,8 +15,8 @@
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 #include "fhiclcpp/ParameterSet.h"
 
-#include "MySensorIdentifier.h"
-#include "OpticksHitHandler.h"
+#include "laropticks/include/MySensorIdentifier.h"
+#include "laropticks/include/OpticksHitHandler.h"
 #include "larsim/PhotonPropagation/OpticalPropagationTools/IOpticalPropagation.h"
 
 

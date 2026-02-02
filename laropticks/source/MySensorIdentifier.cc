@@ -1,5 +1,5 @@
 
-#include "../include/MySensorIdentifier.h"
+#include "laropticks/include/MySensorIdentifier.h"
 
 #include "G4VPhysicalVolume.hh"
 #include "G4LogicalVolume.hh"

@@ -7,7 +7,6 @@
  *  Description: Photon Propagation on GPU by Opticks Library
 **/
 #include "art/Utilities/ToolMacros.h"
-#include "include/OpticksInterface.h"
-
+#include "laropticks/include/OpticksInterface.h"
 
 DEFINE_ART_CLASS_TOOL(phot::OpticksInterface)

@@ -1,6 +1,6 @@
 
 
-#include "../include/OpticksHitHandler.h"
+#include "laropticks/include/OpticksHitHandler.h"
 #include "SEvt.hh"
 #include "G4CXOpticks.hh"
 #include "OpticksPhoton.hh"

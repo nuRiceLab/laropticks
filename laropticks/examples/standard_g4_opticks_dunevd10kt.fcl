@@ -22,11 +22,11 @@ services:
 #{
 #  module_type: RootInput
 #  fileNames: [ "g4s1pdhd.root" ]
-#  maxEvents:  -1        # Number of events to create
+#   maxEvents:  -1        # Number of events to create
 #}
 source: {
   module_type: EmptyEvent
-  maxEvents: 1
+  maxEvents: 2
 }
 
 # Define and configure some modules to do work on each event.
@@ -51,8 +51,8 @@ physics:
 
   #define the producer and filter modules for this path, order matters, 
   #filters reject all following items.  see lines starting physics.producers below
-  simulate: [ rns, largeant , IonAndScint, IonAndScintExternal, elecDrift, optical ]
- 
+  simulate: [ rns, largeant , IonAndScint, IonAndScintExternal, optical ]
+  #simulate: [ largeant , IonAndScint, IonAndScintExternal, optical ]
   #define the output stream, there could be more than one if using filters 
   stream1:  [ out1 ]
 
