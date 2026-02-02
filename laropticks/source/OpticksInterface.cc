@@ -144,7 +144,8 @@ namespace phot{
 	*/
 	void OpticksInterface::beginJob()
 	{
-		mf::LogError("OpticksInterface") << "Not implemented";
+        std::cout <<"----- Hello Opticks Here Begin Job ------ " << std::endl;
+        mf::LogError("OpticksInterface") << "Not implemented";
 	}
 
 	//-------------------------------------------------------------------------//
@@ -153,7 +154,7 @@ namespace phot{
 	*/
 	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(VecSED const& edeps)
 	{
-		mf::LogError("OpticksInterface") << "Not implemented";
+        mf::LogError("OpticksInterface") << "Not implemented";
 		return {};
 	}
 
@@ -163,7 +164,8 @@ namespace phot{
 	*/
 	void OpticksInterface::endJob()
 	{
-		mf::LogError("OpticksInterface") << "Not implemented";
+        std::cout <<"----- Hello Opticks Here End Job ------ " << std::endl;
+		mf::LogError("OpticksInterface") << "Not implemented (Hello From Opticks)";
 	}
 
 	void phot::OpticksInterface::InitializeTools( CLHEP::HepRandomEngine& poisson, CLHEP::HepRandomEngine& scint_time) 	{
