@@ -1,0 +1,10 @@
+#include "standard_g4_dune10kt.fcl"
+
+services: {
+    @table::services
+    @table::dunefd_1x2x6_simulation_services
+}
+
+# swap to 1x2x6 pdfastsim configuration
+#physics.producers.PDFastSim: @local::dunefd_1x2x6_pdfastsim
+physics.producers.OpticalPropagation.OpticalPropagationTools: @local::Opticks

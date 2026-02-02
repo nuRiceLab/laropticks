@@ -17,7 +17,6 @@
 #include "U4.hh"
 #include "SEventConfig.hh"
 #include "OPTICKS_LOG.hh"
-
 #include "fhiclcpp/ParameterSet.h"
 
 
@@ -160,7 +159,48 @@ namespace phot{
 	*/
 	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(VecSED const& edeps)
 	{
-        mf::LogInfo("OpticksInterface") << "Not implemented";
+        mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
+  		// SimPhotonsLite
+  		auto opbtr = std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
+
+
+        int num_points = 0;
+        int num_fastph = 0;
+        int num_slowph = 0;
+        int num_fastdp = 0;
+        int num_slowdp = 0;
+
+        mf::LogTrace("OpticksInterface")<< "Passing SimPhotons from " << edeps.size() << " to Opticks\n";
+
+  	    int trackID,nphot;
+  		double edeposit;
+
+
+        for (auto const& edepi : edeps) {
+
+            if (!(num_points % 1000)) {
+              mf::LogTrace("OpticalPropPDFastSimPAR")
+                << "SimEnergyDeposit: " << num_points << " " << edepi.TrackID() << " " << edepi.Energy()
+                << "\nStart: " << edepi.Start() << "\nEnd: " << edepi.End()
+                << "\nNF: " << edepi.NumFPhotons() << "\nNS: " << edepi.NumSPhotons()
+                << "\nSYR: " << edepi.ScintYieldRatio() << "\n";
+            }
+            num_points++;
+
+        	num_fastph +=edepi.NumFPhotons();
+        	num_slowph +=edepi.NumSPhotons();
+
+        	//trackID = edepi.TrackID();
+        	///nphot = edepi.NumPhotons();
+        	//edeposit = edepi.Energy() / nphot;
+        	//double pos[3] = {edepi.MidPointX(), edepi.MidPointY(), edepi.MidPointZ()};
+		    //geo::Point_t const ScintPoint = {pos[0], pos[1], pos[2]};
+
+		    mf::LogTrace("OpticalPropPDFastSimPAR")
+		    << "Total points: " << num_points << ", total fast photons: " << num_fastph
+		    << ", total slow photons: " << num_slowph << "\ndetected fast photons: " << num_fastdp
+		    << ", detected slow photons: " << num_slowdp;
+		}
 		return {};
 	}
 
