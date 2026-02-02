@@ -15,9 +15,14 @@ cet_build_plugin(Opticks
         Opticks::U4
         OpticalPropagationTools
         PRIVATE
+        larsim::PhotonPropagation
+        larsim::IonizationScintillation
+        larcore::ServiceUtil
+        art_plugin_support::toolMaker
         fhiclcpp::fhiclcpp
         messagefacility::MF_MessageLogger
         lardataobj::Simulation
+
 )
 
 add_subdirectory(include)

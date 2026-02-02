@@ -13,17 +13,18 @@
 
 
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
-
 #include "fhiclcpp/ParameterSet.h"
+
 #include "MySensorIdentifier.h"
 #include "OpticksHitHandler.h"
 #include "larsim/PhotonPropagation/OpticalPropagationTools/IOpticalPropagation.h"
 
 
-namespace fhicl {
-  class ParameterSet;
-}
 
+
+namespace fhicl {
+    class ParameterSet;
+}
 namespace phot {
 
 class MySensorIdentifier;
@@ -32,8 +33,9 @@ class OpticksHitHandler;
     class OpticksInterface : public IOpticalPropagation  {
 
     public:
+
       // Construct with fcl parameters
-      OpticksInterface(fhicl::ParameterSet const& pset);
+      OpticksInterface(fhicl::ParameterSet const& config);
 
       // Default destructor
       ~OpticksInterface();

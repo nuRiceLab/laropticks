@@ -20,12 +20,12 @@
 
 namespace phot{
 
-    OpticksInterface::OpticksInterface(fhicl::ParameterSet const& pset) : IOpticalPropagation()
- 																		  ,GDMLPath(pset.get<std::string>("GDMLPath"))
+    OpticksInterface::OpticksInterface( fhicl::ParameterSet const &config) : IOpticalPropagation()
  																		  ,OpticksSensorIdentifier(nullptr)
  																		  ,OpticksHits(nullptr)
 {
       mf::LogInfo("OpticksInterface::init") << "Initializing OpticksInterface";
+      std::cout << "Hello Opticks" <<std::endl;
 	}
 
 

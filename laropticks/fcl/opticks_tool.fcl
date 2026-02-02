@@ -1,10 +1,12 @@
 // Opticks propagation tool
+#include "opticalsimparameterisations.fcl"
+#include "scintillationtime_tool.fcl"
+#include "opticalpath_tool.fcl"
 
 BEGIN_PROLOG
-
 Opticks:
 {
-    tool_type: Opticks
+    tool_type: OpticksInterface
 }
 
 END_PROLOG
