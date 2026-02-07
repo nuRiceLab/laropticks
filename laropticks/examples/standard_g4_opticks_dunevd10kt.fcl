@@ -1,8 +1,16 @@
+###################################################################################
+# Run following line in terminal before running this code for two events
+##### lar -n 2 -c prodgenie_nu_dune10kt_1x2x6.fcl -o Geni.root
+# Then execute this fcl file as bellow
+##### lar -n 2 -c standard_opticks_dune10kt.fcl -s Geni.root -o opticks.root
+###################################################################################
 #include "LArG4_dune.fcl"
 #include "IonAndScint_dune.fcl"
 #include "elecdrift_dune.fcl"
 #include "services_dune.fcl"
 #include "opticks_tool.fcl"
+#include "larproperties_lartpcdetector.fcl"
+
 process_name: G4
 
 services:
@@ -13,9 +21,13 @@ services:
   MemoryTracker:         {} # default is one
   RandomNumberGenerator: {} #ART native random number generator
   FileCatalogMetadata:   @local::art_file_catalog_mc
-
   @table::dunefdvd_simulation_services
 }
+services.Geometry.GDML: "dune10kt_v2_1x2x6.gdml"
+services.AuxDetGeometry.GDML: @local::services.Geometry.GDML
+services.PhotonVisibilityService: @local::dune10kt_1x2x6_photonvisibilityservice
+services.LArPropertiesService.ScintPreScale: 0.0287
+
 
 #source is now a root file
 #source:

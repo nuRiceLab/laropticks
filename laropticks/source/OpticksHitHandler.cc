@@ -7,7 +7,7 @@
 #include "OpticksGenstep.h"
 #include "QSim.hh"
 
-#include "G4RunManager.hh"
+#include "g4root.hh"
 
 namespace phot{
 
@@ -24,6 +24,7 @@ namespace phot{
       //auto run= G4RunManager::GetRunManager();
       //G4int eventID=run->GetCurrentEvent()->GetEventID();
       G4int eventID=0;
+      std::cout << "Collecting Hits from GPU ...." << std::endl;
 
       for (auto & hit : sphotons){
           OpticksHit ohit= OpticksHit();
@@ -43,7 +44,7 @@ namespace phot{
           ohit.wavelength=hit.wavelength;
           hits.push_back(ohit);
       }
-
+      this->SaveHits();
       // clear the hits
       sphotons.clear();
       sphotons.shrink_to_fit();
@@ -52,26 +53,26 @@ namespace phot{
   }
 
   void OpticksHitHandler::SaveHits(){
-      /*
-      auto run= G4RunManager::GetRunManager();
-      G4int eventID=run->GetCurrentEvent()->GetEventID();
+
+      G4int eventID=0;
       G4AnalysisManager * analysisManager= G4AnalysisManager::Instance();
+      std::cout << "OpticksHitHandler::SaveHits" << std::endl;
       for (auto it : hits){
-          analysisManager->FillNtupleIColumn(1,0,eventID);
-          analysisManager->FillNtupleIColumn(1,1,it.hit_id);
-          analysisManager->FillNtupleIColumn(1,2,it.sensor_id);
-          analysisManager->FillNtupleDColumn(1,3,it.x);
-          analysisManager->FillNtupleDColumn(1,4,it.y);
-          analysisManager->FillNtupleDColumn(1,5,it.z);
-          analysisManager->FillNtupleDColumn(1,6,it.time);
-          analysisManager->FillNtupleDColumn(1,7,it.wavelength);
-          analysisManager->AddNtupleRow(1);
+          analysisManager->FillNtupleIColumn(0,0,eventID);
+          analysisManager->FillNtupleIColumn(0,1,it.hit_id);
+          analysisManager->FillNtupleIColumn(0,2,it.sensor_id);
+          analysisManager->FillNtupleDColumn(0,3,it.x);
+          analysisManager->FillNtupleDColumn(0,4,it.y);
+          analysisManager->FillNtupleDColumn(0,5,it.z);
+          analysisManager->FillNtupleDColumn(0,6,it.time);
+          analysisManager->FillNtupleDColumn(0,7,it.wavelength);
+          analysisManager->AddNtupleRow(0);
       }
-      */
+
      // Handle Hits Here
      hits.clear();
      hits.shrink_to_fit();
-     //G4CXOpticks::Get()->reset(eventID);
-     //QSim::Get()->reset(eventID);
+     G4CXOpticks::Get()->reset(eventID);
+     QSim::Get()->reset(eventID);
   }
 }

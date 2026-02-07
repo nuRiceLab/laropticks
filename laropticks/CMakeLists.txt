@@ -9,6 +9,7 @@ cet_build_plugin(Opticks
         source/OpticksInterface.cc
         source/MySensorIdentifier.cc
         source/OpticksHitHandler.cc
+        source/AnalysisManagerHelper.cc
         LIBRARIES
         PUBLIC
         Opticks::G4CX
@@ -22,10 +23,12 @@ cet_build_plugin(Opticks
         fhiclcpp::fhiclcpp
         messagefacility::MF_MessageLogger
         lardataobj::Simulation
+        nusimdata::SimulationBase
 
 )
 
 add_subdirectory(include)
 add_subdirectory(source)
 add_subdirectory(fcl)
+add_subdirectory(GDML)
 
