@@ -63,6 +63,13 @@ class OpticksHitHandler;
 	  // Finalize execution
 	  void endJob() override;
       void InitializeTools(CLHEP::HepRandomEngine& poisson, CLHEP::HepRandomEngine& scint_time) override;
+      template <typename T>
+      void ReleaseMemory(std::vector<T*> &vec, const std::string& msg) {
+			 std::cout << "ReleasingMemory for " <<msg << std::endl;
+             for (T* ptr : vec) delete ptr;
+			 vec.clear();
+			 vec.shrink_to_fit();
+	  }
 
 	  private:
       std::string GDMLPath;
@@ -71,10 +78,11 @@ class OpticksHitHandler;
       std::map<G4String, G4int>  DetectorIds;
 	  std::vector<simb::MCParticle> const * fParticleList ;
       std::unordered_map<int, const simb::MCParticle> fParticleMap;
-	  std::vector<G4Step*> fsteps;
+	  //std::vector<G4Step*> fsteps;
 	  std::vector<G4StepPoint*> fstepPoints ;
 	  std::vector<G4Track*> ftracks;
 	  std::vector<G4TouchableHistory*> fTouchableHistories;
+	  std::vector<G4DynamicParticle*> fDynamicParticles;
 	  G4VPhysicalVolume* World;
   };
 }

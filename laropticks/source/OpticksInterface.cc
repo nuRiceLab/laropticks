@@ -97,6 +97,8 @@ namespace phot{
 	  G4ThreeVector startPoint=G4ThreeVector(edep.StartX(),edep.StartY(),edep.StartZ());
 	  G4ThreeVector endPoint=G4ThreeVector(edep.EndX(),edep.EndY(),edep.EndZ());
   	  auto touch = new G4TouchableHistory();
+	  fTouchableHistories.push_back(touch);
+
       auto nav = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
 	  nav->LocateGlobalPointAndUpdateTouchable(G4ThreeVector(edep.MidPointX(),edep.MidPointY(),edep.MidPointZ()), touch);
 
@@ -138,7 +140,7 @@ namespace phot{
 			Simulate();
 	  };
 
-	  fsteps.push_back(astep);
+	  //fsteps.push_back(astep);
 	  fstepPoints.push_back(preStep);
 	  fstepPoints.push_back(postStep);
 }
@@ -284,6 +286,7 @@ namespace phot{
   		G4TrackStatus status = static_cast<G4TrackStatus>(mp.StatusCode());
 		aTrack->SetTrackStatus(status);
 		ftracks.push_back(aTrack);
+		fDynamicParticles.push_back(DParticle);
 
 
         for (auto const& edepi : edeps) {
@@ -322,8 +325,6 @@ namespace phot{
 	*/
 	void OpticksInterface::endJob()
 	{
-
-
   		std::cout << "OpticksInterface::endJob" << std::endl;
 
 		mf::LogTrace("OpticksInterface::endJob") << "Finalizing the job process for Opticks";
@@ -335,22 +336,14 @@ namespace phot{
   			analysisManager->CloseFile();
   		}
   	    XMLPlatformUtils::Terminate();
-/*
-		// Release memory
-		for (auto step: fsteps)
-			delete step ;
-		for (auto stepPoint: fstepPoints)
-			delete stepPoint ;
-		for (auto trk: ftracks)
-			delete trk ;
-*/
-		ftracks.clear();
-		fsteps.clear();
-		fstepPoints.clear();
 
-  		ftracks.shrink_to_fit();
-  		fsteps.shrink_to_fit();
-  		fstepPoints.shrink_to_fit();
+		// Release memory
+		ReleaseMemory(fstepPoints,"StepPoints");
+		//ReleaseMemory(fsteps,"Steps");  // Causing Seg Faults
+		ReleaseMemory(fDynamicParticles,"DynamicParticles");
+		ReleaseMemory(ftracks,"Tracks");
+		ReleaseMemory(fTouchableHistories,"TouchableHistories");
+
     }
 
 	void OpticksInterface::InitializeTools( CLHEP::HepRandomEngine& poisson, CLHEP::HepRandomEngine& scint_time) 	{
@@ -390,5 +383,6 @@ namespace phot{
 		fParticleList = plist;
 
     }
+
 
 }

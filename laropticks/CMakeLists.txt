@@ -31,4 +31,4 @@ add_subdirectory(include)
 add_subdirectory(source)
 add_subdirectory(fcl)
 add_subdirectory(GDML)
-
+add_subdirectory(examples)
