@@ -1,9 +1,7 @@
 
 #include "laropticks/include/MySensorIdentifier.h"
 
-#include "G4VPhysicalVolume.hh"
-#include "G4LogicalVolume.hh"
-#include "G4SDManager.hh"
+
 
 namespace phot{
 

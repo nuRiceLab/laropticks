@@ -30,13 +30,12 @@ find_package(cetlib_except REQUIRED EXPORT)
 find_package(fhiclcpp REQUIRED EXPORT)
 find_package(messagefacility REQUIRED)
 
+
 find_package(CLHEP COMPONENTS Evaluator Geometry Random Vector REQUIRED EXPORT)
 find_package(Geant4 REQUIRED EXPORT)
 find_package(ROOT COMPONENTS Core EG GenVector Geom Gpad Hist MathCore Matrix Physics RIO RooFitCore Tree REQUIRED EXPORT)
 find_package(larsim REQUIRED EXPORT)
-find_package(lardataobj REQUIRED EXPORT)
-
-
+find_package(Range-v3 REQUIRED)
 ## Opticks package
 list(APPEND CMAKE_MODULE_PATH "$ENV{OPTICKS_HOME}/cmake/Modules")
 set(OPTICKS_PREFIX "$ENV{OPTICKS_PREFIX}")

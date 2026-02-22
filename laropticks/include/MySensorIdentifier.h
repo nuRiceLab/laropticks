@@ -16,6 +16,11 @@
 #include "U4SensorIdentifier.h"
 #include "G4String.hh"
 
+// Geant4
+#include "G4VPhysicalVolume.hh"
+#include "G4LogicalVolume.hh"
+#include "G4SDManager.hh"
+
 namespace phot {
 
   class MySensorIdentifier : public U4SensorIdentifier{

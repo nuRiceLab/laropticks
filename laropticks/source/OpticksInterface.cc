@@ -1,58 +1,19 @@
 
 // LArSoft related
 #include "laropticks/include/OpticksInterface.h"
-#include "laropticks/include/AnalysisManagerHelper.h"
-#include "lardataobj/Simulation/OpDetBacktrackerRecord.h"
-#include "lardataobj/Simulation/SimEnergyDeposit.h"
-// Geometry Related
-//#include "larcore/Geometry/AuxDetGeometry.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
 
-// Opticks Headers
-#include "G4CXOpticks.hh"
-#include "U4SensorIdentifier.h"
-#include "SEvt.hh"
-#include "U4.hh"
-#include "SEventConfig.hh"
-#include "OPTICKS_LOG.hh"
-#include "fhiclcpp/ParameterSet.h"
-
-// Geant4 Headers
-#include "G4LogicalSkinSurface.hh"
-#include "G4OpticalSurface.hh"
-#include "G4VPhysicalVolume.hh"
-#include "G4Material.hh"
-#include "g4root.hh"
-#include "G4TransportationManager.hh"
-#include "G4DynamicParticle.hh"
-#include "G4ParticleTable.hh"
-#include "G4ParticleDefinition.hh"
-#include "G4ThreeVector.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4TrackStatus.hh"
-#include "G4TransportationManager.hh"
-#include "G4LogicalVolume.hh"
-#include "G4VPhysicalVolume.hh"
-#include "G4MaterialPropertiesIndex.hh"
-
-#include "G4TouchableHandle.hh"
-#include "G4Exception.hh"
-#include "G4LogicalVolumeStore.hh"
-// Xercesc
-#include "xercesc/util/PlatformUtils.hpp"
-#include "xercesc/parsers/XercesDOMParser.hpp"
-#include "xercesc/dom/DOM.hpp"
 
 using namespace xercesc;
 
 namespace phot{
 
     OpticksInterface::OpticksInterface( fhicl::ParameterSet const &config) : IOpticalPropagation()
-																		  ,GDMLPath(config.get<std::string>("GDMLPath"))
+																		  ,GDMLPath("")
  																		  ,OpticksSensorIdentifier(nullptr)
  																		  ,OpticksHits(nullptr)
 																		  ,DetectorIds{}
 																		  ,World(nullptr)
+																		  ,fGeom(*(lar::providerFrom<geo::Geometry>()))
 
     {  }
 	OpticksInterface::~OpticksInterface()=default;
@@ -61,10 +22,11 @@ namespace phot{
   void OpticksInterface::init(){
 
 
-
   	  // Initialize Opticks Logs for Information and Debugging
 	  std::cout << "--- Initiation OpticksInterface ----" << std::endl;
 	  mf::LogTrace("OpticksInterface::init") << "Initializing OpticksInterface";
+
+	  //std::cout << "Number of Detectors " << fGeom.NAuxDets() << std::endl;
       int argc = 0; char** argv = nullptr;
       OPTICKS_LOG(argc, argv);
       cudaDeviceSynchronize();
@@ -77,7 +39,9 @@ namespace phot{
 
       // Initialize
       initPhotonDetectors();
-	  OpticksSensorIdentifier = new MySensorIdentifier(DetectorIds);
+	  if(DetectorIds.size()>0) OpticksSensorIdentifier = new MySensorIdentifier(DetectorIds);
+	  else throw cet::exception("DetectorIds") << "Missing DetectorIds";
+
       OpticksHits = OpticksHitHandler::getInstance();
 
 
@@ -93,9 +57,11 @@ namespace phot{
 
   // Adjust this function
   void OpticksInterface::CollectPhotons(G4Track *track,sim::SimEnergyDeposit edep){
+	  //std::cout << "Collecting Photons .." << std::endl;
       // Example of getting material properties
 	  G4ThreeVector startPoint=G4ThreeVector(edep.StartX(),edep.StartY(),edep.StartZ());
 	  G4ThreeVector endPoint=G4ThreeVector(edep.EndX(),edep.EndY(),edep.EndZ());
+
   	  auto touch = new G4TouchableHistory();
 	  fTouchableHistories.push_back(touch);
 
@@ -103,6 +69,7 @@ namespace phot{
 	  nav->LocateGlobalPointAndUpdateTouchable(G4ThreeVector(edep.MidPointX(),edep.MidPointY(),edep.MidPointZ()), touch);
 
 	  G4Material * mat= G4Material::GetMaterial(touch->GetVolume()->GetLogicalVolume()->GetMaterial()->GetName());
+
 	  auto pTable= mat->GetMaterialPropertiesTable();
 
 	  if(!pTable){
@@ -135,6 +102,7 @@ namespace phot{
       int CollectedPhotons=SEvt::GetNumPhotonCollected(0);
       int maxPhoton=SEventConfig::MaxPhoton();
       // Simulate in batch
+
       if(CollectedPhotons>=maxPhoton) {
 		std::cout << "Simulating in Batch Mode ...." << std::endl;
 			Simulate();
@@ -144,8 +112,6 @@ namespace phot{
 	  fstepPoints.push_back(preStep);
 	  fstepPoints.push_back(postStep);
 }
-
-
 
 
   void OpticksInterface::Simulate(){
@@ -192,7 +158,7 @@ namespace phot{
 
 	// This is a minimal parser to get auxilary values from gdml and assign them to detector logical volumes
   	XercesDOMParser parser;
-  	parser.parse((getBuildDir()+GDMLPath).c_str());
+  	parser.parse((GDMLPath).c_str());
 
   	DOMDocument* doc = parser.getDocument();
   	DOMElement* root = doc->getDocumentElement();
@@ -201,6 +167,7 @@ namespace phot{
   	DOMNodeList* volumes = root->getElementsByTagName(XMLString::transcode("volume"));
   	G4LogicalVolumeStore* lvStore = G4LogicalVolumeStore::GetInstance();
   	G4LogicalVolume* lv=nullptr;
+
   	for (XMLSize_t i = 0; i < volumes->getLength(); ++i) {
   		DOMElement* vol = dynamic_cast<DOMElement*>(volumes->item(i));
   		std::string volName = XMLString::transcode(vol->getAttribute(XMLString::transcode("name")));
@@ -217,8 +184,11 @@ namespace phot{
   			// Assign Skin Surfaces
   			if (type=="Surface"){
 				lv=lvStore->GetVolume(volName);
+
 				if(lv)
+				{
   					new G4LogicalSkinSurface(volName+"_Surface",lv,ArapucaSurface);
+				}
 				else std::cout << "Cant find logical volume for " << volName << std::endl;
   				count++;
   			}
@@ -233,7 +203,15 @@ namespace phot{
   			}
   		}
   	}
-
+	/*
+	std::cout << "Num of Channels " <<  fGeom.NOpDets() <<std::endl;
+  		unsigned int nChannels = fGeom.NOpDets();
+		for (size_t i =0 ; i < nChannels; ++i) {
+			geo::OpDetGeo const& opDet = fGeom.OpDetGeoFromOpDet(i);
+			std::cout << " ID " <<opDet.ID() << " Center " << opDet.GetCenter() <<  std::endl;
+			std::string info=opDet.OpDetInfo();
+			std::cout << info << std::endl;
+		}*/
 
  }
 
@@ -248,6 +226,10 @@ namespace phot{
 		std::cout << "Begin Job" << std::endl;
 		// initialize the parser
   		XMLPlatformUtils::Initialize();
+
+ 		//Getting the GDMLPATH incase we need it
+	    GDMLPath = fGeom.GDMLFile();
+		std::cout << "GDMLPath " << GDMLPath << std::endl;
   	}
 
 
@@ -264,7 +246,8 @@ namespace phot{
 
         mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
   		// SimPhotonsLite
-  		auto opbtr = std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
+  		//fOpDetBacktrackerMap = nullptr;
+		std::unique_ptr<std::vector<sim::OpDetBacktrackerRecord>> records;
 
         int num_points = 0;
         int num_fastph = 0;
@@ -272,22 +255,31 @@ namespace phot{
         int num_fastdp = 0;
         int num_slowdp = 0;
 
+
         mf::LogTrace("OpticksInterface::executeEvent")<< "Edep size " << edeps.size() << "\n";
 
-  	    int trackID,nphot;
+  	    int nphot;
   		double edeposit;
+
+
 		// Get The Parent Information
 		simb::MCParticle mp=fParticleList->at(0);
 	    G4ParticleDefinition* pdef = G4ParticleTable::GetParticleTable()->FindParticle(mp.PdgCode());
+
 		G4DynamicParticle * DParticle= new G4DynamicParticle(pdef,G4ThreeVector(mp.Px(0),mp.Py(0),mp.Pz(0)),mp.E(0));
 		G4Track * aTrack =new G4Track(DParticle,mp.T(),G4ThreeVector(mp.Vx(0),mp.Vy(0),mp.Vz(0)));
+
 		aTrack->SetTrackID(mp.TrackId());
+		trackID = mp.TrackId();
+
 		aTrack->SetParentID(mp.Mother());
   		G4TrackStatus status = static_cast<G4TrackStatus>(mp.StatusCode());
 		aTrack->SetTrackStatus(status);
 		ftracks.push_back(aTrack);
 		fDynamicParticles.push_back(DParticle);
+		std::cout << " Size of Energy Depositions " <<  edeps.size() << std::endl;
 
+		int tempTrackID=edeps.at(0).TrackID();
 
         for (auto const& edepi : edeps) {
             if (!(num_points % 1000))
@@ -302,13 +294,20 @@ namespace phot{
             	<< std::endl;
 
             }
+			if (tempTrackID != edepi.TrackID()){
+				std::cout << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() << std::endl;
+				tempTrackID = edepi.TrackID();
+			}
 			CollectPhotons(aTrack,edepi);
+
             num_points++;
 
+			nphot=edepi.NumPhotons();
+
+        	edeposit = edeposit + edepi.Energy();
+			nphot+=edepi.NumSPhotons();
         	num_fastph +=edepi.NumFPhotons();
         	num_slowph +=edepi.NumSPhotons();
-
-
 
 		    mf::LogTrace("OpticksInterface:executeEvent")
 		    << "Total points: " << num_points << ", total fast photons: " << num_fastph
@@ -316,7 +315,7 @@ namespace phot{
 		    << ", detected slow photons: " << num_slowdp;
 		}
 		Simulate();
-		return {};
+		return records ;
 	}
 
 	//-------------------------------------------------------------------------//
@@ -350,13 +349,6 @@ namespace phot{
  		// Opticks doesn't need this class, leave empty.
        }
 
-	std::string OpticksInterface::getBuildDir() {
-		const char* env = std::getenv("MRB_BUILDDIR");
-		if(!env)
-			throw std::runtime_error("MRB_BUILDDIR not set");
-  		return std::string(env)+"/";
-	}
-
 	void OpticksInterface::initFileManager() {
     	// Get the analysis manager
      	G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
@@ -367,6 +359,7 @@ namespace phot{
   		//Opticks Hits
   		analysisManager->CreateNtuple("OpticksHits","Opticks Hits");
   		analysisManager->CreateNtupleIColumn("evtID");
+  		analysisManager->CreateNtupleIColumn("parent_Id");
   		analysisManager->CreateNtupleIColumn("hit_Id");
   		analysisManager->CreateNtupleIColumn("SensorID");
   		analysisManager->CreateNtupleDColumn("x");

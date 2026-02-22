@@ -15,16 +15,22 @@ cet_build_plugin(Opticks
         Opticks::G4CX
         Opticks::U4
         OpticalPropagationTools
+        messagefacility::MF_MessageLogger
+        art::Framework_Principal
+        larcore::ServiceUtil
+        larcorealg::Geometry
         PRIVATE
         larsim::PhotonPropagation
         larsim::IonizationScintillation
-        larcore::ServiceUtil
+        larcoreobj::geo_vectors
+        lardataobj::Simulation
         art_plugin_support::toolMaker
         fhiclcpp::fhiclcpp
-        messagefacility::MF_MessageLogger
-        lardataobj::Simulation
+        nurandom::RandomUtils_NuRandomService_service
+        canvas::canvas
+        fhiclcpp::types
+        cetlib_except::cetlib_except
         nusimdata::SimulationBase
-
 )
 
 add_subdirectory(include)

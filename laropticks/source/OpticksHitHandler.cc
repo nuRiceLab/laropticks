@@ -1,13 +1,5 @@
 
-
 #include "laropticks/include/OpticksHitHandler.h"
-#include "SEvt.hh"
-#include "G4CXOpticks.hh"
-#include "OpticksPhoton.hh"
-#include "OpticksGenstep.h"
-#include "QSim.hh"
-
-#include "g4root.hh"
 
 namespace phot{
 
@@ -19,17 +11,29 @@ namespace phot{
   void OpticksHitHandler::CollectHits() {
 
       //Collecting Opticks Photons
+	  std::cout << "Collecting Hits from GPU ...." << std::endl;
+
+	  // --- Get Hits ----
       SEvt* sev             = SEvt::Get_EGPU();
       sphoton::Get(sphotons, sev->getHit());
       //auto run= G4RunManager::GetRunManager();
       //G4int eventID=run->GetCurrentEvent()->GetEventID();
-      G4int eventID=0;
-      std::cout << "Collecting Hits from GPU ...." << std::endl;
+	  G4int eventID=0;
+	  //std::cout << "Generating OpDetBacktrackerRecord ...." << std::endl;
+	  ///std::map<int,sim::OpDetBacktrackerRecord> btmap;
 
-      for (auto & hit : sphotons){
+	  /*
+      fTouchableHistory = new G4TouchableHistory();
+      auto nav = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
+	  nav->LocateGlobalPointAndUpdateTouchable(G4ThreeVector(edep.MidPointX(),edep.MidPointY(),edep.MidPointZ()), fTouchableHistory);
+	  fTouchableHistory->GetVolume()->GetLogicalVolume()->GetName();
+	  */
+
+      for (auto & hit : sphotons) {
           OpticksHit ohit= OpticksHit();
-          ohit.hit_id=hit.index;
-          ohit.sensor_id=hit.identity;
+          ohit.hit_id=hit.iindex();
+          ohit.parent_id=hit.get_PId();
+          ohit.sensor_id=hit.get_identity()-1;
           ohit.x=hit.pos.x;
           ohit.y=hit.pos.y;
           ohit.z=hit.pos.z;
@@ -44,12 +48,14 @@ namespace phot{
           ohit.wavelength=hit.wavelength;
           hits.push_back(ohit);
       }
-      this->SaveHits();
+	  //
+	  SaveHits();
       // clear the hits
       sphotons.clear();
       sphotons.shrink_to_fit();
       G4CXOpticks::Get()->reset(eventID);
       QSim::Get()->reset(eventID);
+	  //
   }
 
   void OpticksHitHandler::SaveHits(){
@@ -59,13 +65,14 @@ namespace phot{
       std::cout << "OpticksHitHandler::SaveHits" << std::endl;
       for (auto it : hits){
           analysisManager->FillNtupleIColumn(0,0,eventID);
-          analysisManager->FillNtupleIColumn(0,1,it.hit_id);
-          analysisManager->FillNtupleIColumn(0,2,it.sensor_id);
-          analysisManager->FillNtupleDColumn(0,3,it.x);
-          analysisManager->FillNtupleDColumn(0,4,it.y);
-          analysisManager->FillNtupleDColumn(0,5,it.z);
-          analysisManager->FillNtupleDColumn(0,6,it.time);
-          analysisManager->FillNtupleDColumn(0,7,it.wavelength);
+          analysisManager->FillNtupleIColumn(0,1,it.parent_id);
+          analysisManager->FillNtupleIColumn(0,2,it.hit_id);
+          analysisManager->FillNtupleIColumn(0,3,it.sensor_id);
+          analysisManager->FillNtupleDColumn(0,4,it.x);
+          analysisManager->FillNtupleDColumn(0,5,it.y);
+          analysisManager->FillNtupleDColumn(0,6,it.z);
+          analysisManager->FillNtupleDColumn(0,7,it.time);
+          analysisManager->FillNtupleDColumn(0,8,it.wavelength);
           analysisManager->AddNtupleRow(0);
       }
 
@@ -75,4 +82,10 @@ namespace phot{
      G4CXOpticks::Get()->reset(eventID);
      QSim::Get()->reset(eventID);
   }
+	// BackTracker goes here
+  std::vector<sim::OpDetBacktrackerRecord> * OpticksHitHandler::GetOpDetBacktrackerRecords(std::map<int,sim::OpDetBacktrackerRecord> *fOpBTMap,int TrackId,double edep)
+  {
+	return {};
+  }
+
 }

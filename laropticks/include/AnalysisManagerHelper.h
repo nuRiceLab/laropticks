@@ -6,6 +6,7 @@
 #include "G4Threading.hh"
 #include "G4AutoLock.hh"
 #include "G4ThreeVector.hh"
+#include "g4root.hh"
 
 #ifndef GDMLOPTICKS_ANALYSISMANAGERHELPER_HH
 #define GDMLOPTICKS_ANALYSISMANAGERHELPER_HH

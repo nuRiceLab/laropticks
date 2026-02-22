@@ -12,19 +12,65 @@
 #define OPTICKSINTERFACE_H
 
 
-#include "lardataobj/Simulation/SimEnergyDeposit.h"
-#include "fhiclcpp/ParameterSet.h"
 
+// laropticks headers
 #include "laropticks/include/MySensorIdentifier.h"
 #include "laropticks/include/OpticksHitHandler.h"
+#include "laropticks/include/AnalysisManagerHelper.h"
+
+// LArSoft Headers
 #include "larsim/PhotonPropagation/OpticalPropagationTools/IOpticalPropagation.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
+#include "larcore/Geometry/Geometry.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
+#include "lardataobj/Simulation/SimEnergyDeposit.h"
+#include "fhiclcpp/ParameterSet.h"
+#include "larcorealg/Geometry/BoxBoundedGeo.h"
+#include "larcorealg/Geometry/OpDetGeo.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
+#include "lardataobj/Simulation/OpDetBacktrackerRecord.h"
+#include "lardataobj/Simulation/OpDetBacktrackerRecord.h"
+#include "lardataobj/Simulation/SimEnergyDeposit.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
+// Opticks Headers
+#include "G4CXOpticks.hh"
+#include "U4SensorIdentifier.h"
+#include "SEvt.hh"
+#include "U4.hh"
+#include "SEventConfig.hh"
+#include "OPTICKS_LOG.hh"
+#include "fhiclcpp/ParameterSet.h"
 
+// Geant4 Headers
+#include "G4LogicalSkinSurface.hh"
+#include "G4OpticalSurface.hh"
+#include "G4VPhysicalVolume.hh"
+#include "G4Material.hh"
+#include "g4root.hh"
+#include "G4TransportationManager.hh"
+#include "G4DynamicParticle.hh"
+#include "G4ParticleTable.hh"
+#include "G4ParticleDefinition.hh"
+#include "G4ThreeVector.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4TrackStatus.hh"
+#include "G4TransportationManager.hh"
+#include "G4LogicalVolume.hh"
+#include "G4VPhysicalVolume.hh"
+#include "G4MaterialPropertiesIndex.hh"
+#include "G4TouchableHandle.hh"
+#include "G4Exception.hh"
+#include "G4LogicalVolumeStore.hh"
 #include "G4Track.hh"
 #include "G4Step.hh"
 #include "G4StepPoint.hh"
 #include "G4TouchableHistory.hh"
+
+// Xercesc
+#include "xercesc/util/PlatformUtils.hpp"
+#include "xercesc/parsers/XercesDOMParser.hpp"
+#include "xercesc/dom/DOM.hpp"
 
 namespace fhicl {
     class ParameterSet;
@@ -51,7 +97,7 @@ class OpticksHitHandler;
       void GetHitsFromGPU();
       void Simulate();
 
-	  std::string getBuildDir();
+
 	  // Initialize fast simulation
 	  void beginJob() override;
 
@@ -84,6 +130,9 @@ class OpticksHitHandler;
 	  std::vector<G4TouchableHistory*> fTouchableHistories;
 	  std::vector<G4DynamicParticle*> fDynamicParticles;
 	  G4VPhysicalVolume* World;
+	  //std::map<int,sim::OpDetBacktrackerRecord> *fOpDetBacktrackerMap;
+	  int trackID;
+	  geo::GeometryCore const& fGeom;
   };
 }
 

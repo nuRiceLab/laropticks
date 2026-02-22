@@ -11,9 +11,9 @@
 #ifndef OPTICKS_OPTICKSHITHANDLER_HH
 #define OPTICKS_OPTICKSHITHANDLER_HH
 
-#include "G4Threading.hh"
-#include "G4AutoLock.hh"
-#include "G4ThreeVector.hh"
+
+#include "lardataobj/Simulation/SimEnergyDeposit.h"
+#include "lardataobj/Simulation/OpDetBacktrackerRecord.h"
 
 // Opticks headers
 #include "SEvt.hh"
@@ -21,6 +21,17 @@
 #include "OpticksPhoton.hh"
 #include "OpticksGenstep.h"
 #include "QSim.hh"
+#include "G4TouchableHistory.hh"
+
+// Geant4
+#include "g4root.hh"
+#include "G4Threading.hh"
+#include "G4AutoLock.hh"
+#include "G4ThreeVector.hh"
+#include "G4RunManager.hh"
+
+// Cetlib
+#include "cetlib_except/exception.h"
 
 
 namespace phot{
@@ -37,20 +48,25 @@ namespace phot{
         };
 
         struct OpticksHit{
-            G4int hit_id;
-            G4int sensor_id;
-            G4double time;
-            G4double x,y,z;
-            G4double momx,momy,momz;
-            G4double polx,poly,polz;
-            G4double wavelength;
-            G4double boundary;
+            int hit_id;
+            int parent_id;
+            int sensor_id;
+            double time;
+            double x,y,z;
+            double momx,momy,momz;
+            double polx,poly,polz;
+            double wavelength;
+            double boundary;
         };
 
+
+
         void CollectHits();
+
         void AddHits();
         void SaveHits();
 
+		std::vector<sim::OpDetBacktrackerRecord> * GetOpDetBacktrackerRecords(std::map<int,sim::OpDetBacktrackerRecord> *fOpBTMap,int TrackId,double edep);
 
     private:
         OpticksHitHandler(){};
@@ -58,7 +74,7 @@ namespace phot{
         static G4Mutex mtx;
         std::vector<sphoton> sphotons;
         std::vector<OpticksHit> hits;
-
+		G4TouchableHistory *fTouchableHistory;
 
 
   };

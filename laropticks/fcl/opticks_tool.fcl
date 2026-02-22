@@ -7,7 +7,6 @@ BEGIN_PROLOG
 Opticks:
 {
     tool_type: Opticks
-    GDMLPath: "laropticks/gdml/dune10kt_v6_refactored_1x2x6.gdml"
 }
 
 END_PROLOG

@@ -2,7 +2,7 @@
 // Created by ilker on 11/5/25.
 //
 #include "laropticks/include/AnalysisManagerHelper.h"
-#include "g4root.hh"
+
 // Initialize Static Member
 AnalysisManagerHelper * AnalysisManagerHelper::instance = nullptr;
 G4Mutex AnalysisManagerHelper::mtx;
