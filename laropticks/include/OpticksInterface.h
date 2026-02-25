@@ -103,7 +103,7 @@ class OpticksHitHandler;
 
 	  // Execute simulation on a single art::Event
 	  UPVecBTR executeEvent(VecSED const& edeps) override;
-
+	  void initTracks();
 	  void SetParticleList(std::vector<simb::MCParticle> const* plist) override;
 	  //simb::MCParticle * FindParticle(int TrackID);
 	  // Finalize execution
@@ -133,6 +133,9 @@ class OpticksHitHandler;
 	  //std::map<int,sim::OpDetBacktrackerRecord> *fOpDetBacktrackerMap;
 	  int trackID;
 	  geo::GeometryCore const& fGeom;
+	  std::map<int,G4Track*> *Trackmps;
+	  std::map<int, sim::OBTRHelper> obtrHelpers;
+	  int eventID;
   };
 }
 

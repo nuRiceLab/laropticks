@@ -61,7 +61,7 @@ namespace phot{
 
 
 
-        void CollectHits();
+        void CollectHits(int eventID,std::map<int, sim::OBTRHelper> obtrHelpers);
 
         void AddHits();
         void SaveHits();
@@ -75,7 +75,7 @@ namespace phot{
         std::vector<sphoton> sphotons;
         std::vector<OpticksHit> hits;
 		G4TouchableHistory *fTouchableHistory;
-
+		int feventID;
 
   };
 

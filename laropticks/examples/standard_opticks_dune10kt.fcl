@@ -71,9 +71,11 @@ outputs:
 {
   out1:
   {
-    module_type: RootOutput
-    dataTier:    "simulated"
-    compressionLevel: 1
+     module_type: RootOutput
+     fileName:    "%ifb_g4.root"
+     dataTier:    "simulated"
+     compressionLevel: 1
+
   }
 }
 

@@ -14,6 +14,7 @@ namespace phot{
 																		  ,DetectorIds{}
 																		  ,World(nullptr)
 																		  ,fGeom(*(lar::providerFrom<geo::Geometry>()))
+																		  ,Trackmps(nullptr)
 
     {  }
 	OpticksInterface::~OpticksInterface()=default;
@@ -51,7 +52,6 @@ namespace phot{
 
       // Initialize root file (For Testing Purposes)
 	  initFileManager();
-
 
   }
 
@@ -120,12 +120,11 @@ namespace phot{
 	  std::cout << "OpticksInterface::Simulate" << std::endl;
       G4CXOpticks * g4xc=G4CXOpticks::Get();
       //Event id needed in here
-	  int eventID=0;
+
 	  g4xc->simulate(eventID,0);
       cudaDeviceSynchronize();
       if(SEvt::GetNumHit(0)>0){
-
-          OpticksHits->CollectHits();
+          OpticksHits->CollectHits(eventID,obtrHelpers);
       }else std::cout << "OpticksInterface::Simulate: No Hits" << std::endl;
 	  //Event id needed here
       g4xc->reset(eventID);
@@ -198,17 +197,17 @@ namespace phot{
   				G4cout << "Attaching sensitive detector " << value
 						 << " to volume " << volName
 						 <<  G4endl << G4endl;
+  				obtrHelpers.emplace(sid,sid);
   				DetectorIds.insert(std::pair<G4String,G4int>(volName+"_PV",sid++));
-
   			}
   		}
   	}
-	/*
-	std::cout << "Num of Channels " <<  fGeom.NOpDets() <<std::endl;
+		/*
+	    std::cout << "Num of Channels " <<  fGeom.NOpDets() <<std::endl;
   		unsigned int nChannels = fGeom.NOpDets();
 		for (size_t i =0 ; i < nChannels; ++i) {
 			geo::OpDetGeo const& opDet = fGeom.OpDetGeoFromOpDet(i);
-			std::cout << " ID " <<opDet.ID() << " Center " << opDet.GetCenter() <<  std::endl;
+			//std::cout << " ID " <<opDet.ID() << " Center " << opDet.GetCenter() <<  std::endl;
 			std::string info=opDet.OpDetInfo();
 			std::cout << info << std::endl;
 		}*/
@@ -230,6 +229,7 @@ namespace phot{
  		//Getting the GDMLPATH incase we need it
 	    GDMLPath = fGeom.GDMLFile();
 		std::cout << "GDMLPath " << GDMLPath << std::endl;
+		eventID=0;
   	}
 
 
@@ -241,13 +241,15 @@ namespace phot{
 	{
 
   		if(!World) init();
-
+		// init tracking
+		if(Trackmps==nullptr) initTracks();
 		std::cout << "OpticksInterface::executeEvent" << std::endl;
 
         mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
-  		// SimPhotonsLite
+		// Optical Back Tracker
   		//fOpDetBacktrackerMap = nullptr;
-		std::unique_ptr<std::vector<sim::OpDetBacktrackerRecord>> records;
+
+		auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
 
         int num_points = 0;
         int num_fastph = 0;
@@ -261,26 +263,18 @@ namespace phot{
   	    int nphot;
   		double edeposit;
 
-
+		std::cout << "Amount of Particles " << fParticleList->size() << std::endl;
 		// Get The Parent Information
-		simb::MCParticle mp=fParticleList->at(0);
-	    G4ParticleDefinition* pdef = G4ParticleTable::GetParticleTable()->FindParticle(mp.PdgCode());
-
-		G4DynamicParticle * DParticle= new G4DynamicParticle(pdef,G4ThreeVector(mp.Px(0),mp.Py(0),mp.Pz(0)),mp.E(0));
-		G4Track * aTrack =new G4Track(DParticle,mp.T(),G4ThreeVector(mp.Vx(0),mp.Vy(0),mp.Vz(0)));
-
-		aTrack->SetTrackID(mp.TrackId());
-		trackID = mp.TrackId();
-
-		aTrack->SetParentID(mp.Mother());
-  		G4TrackStatus status = static_cast<G4TrackStatus>(mp.StatusCode());
-		aTrack->SetTrackStatus(status);
-		ftracks.push_back(aTrack);
-		fDynamicParticles.push_back(DParticle);
 		std::cout << " Size of Energy Depositions " <<  edeps.size() << std::endl;
+		G4Track * aTrack=nullptr;
 
 		int tempTrackID=edeps.at(0).TrackID();
-
+		auto it = Trackmps->find(tempTrackID);
+		if (it != Trackmps->end()) aTrack = it->second;
+		else {
+			std::cout<<"No Track Found"<<std::endl;
+			assert(false);
+		}
         for (auto const& edepi : edeps) {
             if (!(num_points % 1000))
 			{
@@ -297,6 +291,12 @@ namespace phot{
 			if (tempTrackID != edepi.TrackID()){
 				std::cout << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() << std::endl;
 				tempTrackID = edepi.TrackID();
+				it = Trackmps->find(tempTrackID);
+				if (it != Trackmps->end()) aTrack = it->second;
+				else {
+					std::cout<<"No Track Found"<<std::endl;
+					assert(false);
+				}
 			}
 			CollectPhotons(aTrack,edepi);
 
@@ -314,7 +314,19 @@ namespace phot{
 		    << ", total slow photons: " << num_slowph << "\ndetected fast photons: " << num_fastdp
 		    << ", detected slow photons: " << num_slowdp;
 		}
+
 		Simulate();
+		if(obtrHelpers.size()>0){
+			for (auto& opbtr: obtrHelpers)
+				records->emplace_back(opbtr.second);
+
+		} else std::cout << "obtrHelper seems empty ...." << std::endl;
+
+
+		Trackmps->clear();
+		delete Trackmps;
+		Trackmps=nullptr;
+		eventID++;
 		return records ;
 	}
 
@@ -369,6 +381,7 @@ namespace phot{
   		analysisManager->CreateNtupleDColumn("wavelength");
   		analysisManager->FinishNtuple();
 	}
+
 	// Do nothing for PDFastSimPAr.cc
 	// This is mainly for opticks
 	void OpticksInterface::SetParticleList(std::vector<simb::MCParticle> const* plist)
@@ -377,5 +390,27 @@ namespace phot{
 
     }
 
+	void OpticksInterface::initTracks(){
+		std::cout << "OpticksInterface::initTracks" << std::endl;
+		std::cout << "Setting up Tracks" << std::endl;
+		Trackmps = new std::map<int, G4Track*>();
+		for (size_t ip=0; ip<fParticleList->size(); ip++){
+			auto mp = fParticleList->at(ip);
+		    G4ParticleDefinition* pdef = G4ParticleTable::GetParticleTable()->FindParticle(mp.PdgCode());
+
+			G4DynamicParticle * DParticle= new G4DynamicParticle(pdef,G4ThreeVector(mp.Px(0),mp.Py(0),mp.Pz(0)),mp.E(0));
+			auto trk =new G4Track(DParticle,mp.T(),G4ThreeVector(mp.Vx(0),mp.Vy(0),mp.Vz(0)));
+
+			trk->SetTrackID(mp.TrackId());
+			trackID = mp.TrackId();
+
+			trk->SetParentID(mp.Mother());
+  			G4TrackStatus status = static_cast<G4TrackStatus>(mp.StatusCode());
+			trk->SetTrackStatus(status);
+			ftracks.push_back(trk);
+			fDynamicParticles.push_back(DParticle);
+			Trackmps->insert( std::make_pair(mp.TrackId(), trk) );
+		}
+	}
 
 }
