@@ -43,6 +43,7 @@
           <matrix name="FTC" coldim="1" values="7.*ns" />
           <matrix name="STC" coldim="1" values="1400.*ns" />
           <matrix name="YR"  coldim="1" values="0.75" />
+          <matrix name="YR2"  coldim="1" values="0.25" />
           <matrix name="SCINT" coldim="2" values="2.17*eV 0.04
                                                    2.25*eV 0.12
                                                    2.33*eV 0.27
@@ -333,6 +334,8 @@
        <property name="SCINTILLATIONCOMPONENT2" ref="SLOWCOMPONENT0x4b72290"/>
        <property name="SCINTILLATIONTIMECONSTANT1" ref="FTC"/>
        <property name="SCINTILLATIONTIMECONSTANT2" ref="STC"/>
+       <property name="SCINTILLATIONYIELD1" ref="YR"/>
+       <property name="SCINTILLATIONYIELD2" ref="YR2"/>
   </material>
 
   <material name="ArGas" formula="ArGas">

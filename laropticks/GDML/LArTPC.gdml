@@ -129,6 +129,7 @@
         <matrix name="FTC" coldim="1" values="7.*ns" />
         <matrix name="STC" coldim="1" values="1400.*ns" />
         <matrix name="YR"  coldim="1" values="0.75" />
+        <matrix name="YR2"  coldim="1" values="0.25" />
         <matrix name="SCINT" coldim="2" values="2.17*eV 0.04
                                                  2.25*eV 0.12 
                                                  2.33*eV 0.27 
@@ -221,6 +222,7 @@
             <property name="bisMSBREEMISSIONPROB" ref="bisMSBREEMISSIONPROB0x4b7a3a0"/>
             <property name="bisMSBCOMPONENT" ref="bisMSBCOMPONENT0x4b7a690"/>
             <property name="bisMSBTIMECONSTANT" ref="bisMSBTIMECONSTANT0x4b7b8f0"/>
+
             <!--
                         <property name="SLOWCOMPONENT" ref="SCINT"/>
                         <property name="SCINTILLATIONYIELD" ref="SY" />
