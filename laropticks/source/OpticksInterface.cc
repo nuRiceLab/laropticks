@@ -5,23 +5,10 @@
 
 using namespace xercesc;
 
-namespace phot{
-
-    OpticksInterface::OpticksInterface( fhicl::ParameterSet const &config) : IOpticalPropagation()
-																		  ,GDMLPath("")
- 																		  ,OpticksSensorIdentifier(nullptr)
- 																		  ,OpticksHits(nullptr)
-																		  ,DetectorIds{}
-																		  ,World(nullptr)
-																		  ,fGeom(*(lar::providerFrom<geo::Geometry>()))
-																		  ,Trackmps(nullptr)
-
-    {  }
-	OpticksInterface::~OpticksInterface()=default;
+namespace laropticks{
 
 // Initialize Opticks and Its Libraries
   void OpticksInterface::init(){
-
 
   	  // Initialize Opticks Logs for Information and Debugging
 	  std::cout << "--- Initiation OpticksInterface ----" << std::endl;
@@ -237,11 +224,12 @@ namespace phot{
 	/*!
 	* Simulate photons per art Event \c art::Event .
 	*/
-	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(VecSED const& edeps)
-	{
-
+    OpticksInterface::UPVecBTR OpticksInterface::executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist);
+    {
   		if(!World) init();
 		// init tracking
+        SetParticleList(plist);
+
 		if(Trackmps==nullptr) initTracks();
 		std::cout << "OpticksInterface::executeEvent" << std::endl;
 

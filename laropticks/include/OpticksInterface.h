@@ -19,12 +19,10 @@
 #include "laropticks/include/AnalysisManagerHelper.h"
 
 // LArSoft Headers
-#include "larsim/PhotonPropagation/OpticalPropagationTools/IOpticalPropagation.h"
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
-#include "fhiclcpp/ParameterSet.h"
 #include "larcorealg/Geometry/BoxBoundedGeo.h"
 #include "larcorealg/Geometry/OpDetGeo.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
@@ -72,23 +70,27 @@
 #include "xercesc/parsers/XercesDOMParser.hpp"
 #include "xercesc/dom/DOM.hpp"
 
-namespace fhicl {
-    class ParameterSet;
-}
-namespace phot {
+namespace laropticks {
 
 class MySensorIdentifier;
 class OpticksHitHandler;
 
-    class OpticksInterface : public IOpticalPropagation  {
+    class OpticksInterface  {
 
     public:
+      using VecSED = std::vector<sim::SimEnergyDeposit>;
+      using UPVecBTR = std::unique_ptr<std::vector<sim::OpDetBacktrackerRecord>>;
+
+      static  OpticksInterface& GetInstance (){
+          static OpticksInterface instance;
+          return instance
+      }
 
       // Construct with fcl parameters
-      OpticksInterface(fhicl::ParameterSet const& config);
+      OpticksInterface()=default;
 
       // Default destructor
-      ~OpticksInterface();
+      ~OpticksInterface()=default;
 
       void init();
       void initPhotonDetectors();
@@ -97,6 +99,7 @@ class OpticksHitHandler;
       void GetHitsFromGPU();
       void Simulate();
 
+      UPVecBTR executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist);
 
 	  // Initialize fast simulation
 	  void beginJob() override;

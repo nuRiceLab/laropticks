@@ -124,98 +124,14 @@ namespace laropticks {
     }
 
     auto mcHandle = event.getValidHandle<std::vector<simb::MCParticle>>("largeant");
-    fOpticalPropagationTool->SetParticleList(  mcHandle);
 
     auto const& edeps = edepHandle;
+
     // Include energy deposits here
+    auto result=opticks->executeEvent(event.event(),edepHandle,mcHandle);
 
-    if(!World) init();
-	// init tracking
-	if(Trackmps==nullptr) initTracks();
-	std::cout << "OpticksInterface::executeEvent" << std::endl;
+    event.put(std::move(result));
 
-    mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
-	// Optical Back Tracker
-  	//fOpDetBacktrackerMap = nullptr;
-
-	auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
-
-    int num_points = 0;
-    int num_fastph = 0;
-    int num_slowph = 0;
-    int num_fastdp = 0;
-    int num_slowdp = 0;
-
-
-    mf::LogTrace("OpticksInterface::executeEvent")<< "Edep size " << edeps.size() << "\n";
-
-    int nphot;
-  	double edeposit;
-
-	std::cout << "Amount of Particles " << fParticleList->size() << std::endl;
-	// Get The Parent Information
-	std::cout << " Size of Energy Depositions " <<  edeps.size() << std::endl;
-	G4Track * aTrack=nullptr;
-
-	int tempTrackID=edeps.at(0).TrackID();
-	auto it = Trackmps->find(tempTrackID);
-	if (it != Trackmps->end()) aTrack = it->second;
-	else {
-		std::cout<<"No Track Found"<<std::endl;
-		assert(false);
-	}
-    for (auto const& edepi : edeps) {
-        if (!(num_points % 1000))
-		{
-		  std::cout <<" Opticks "
-          //mf::LogTrace("OpticksInterface")
-            << "SimEnergyDeposit: " << num_points << " " << edepi.TrackID() << " " << edepi.Energy()
-            << "\nStart: " << edepi.Start() << "\nEnd: " << edepi.End()
-            << "\nNF: " << edepi.NumFPhotons() << "\nNS: " << edepi.NumSPhotons()
-            << "\nSYR: " << edepi.ScintYieldRatio()
-			<< "PDG: " << edepi.PdgCode()<<"\n"
-            << std::endl;
-
-        }
-		if (tempTrackID != edepi.TrackID()){
-			std::cout << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() << std::endl;
-			tempTrackID = edepi.TrackID();
-			it = Trackmps->find(tempTrackID);
-			if (it != Trackmps->end()) aTrack = it->second;
-			else {
-				std::cout<<"No Track Found"<<std::endl;
-				assert(false);
-			}
-		}
-		CollectPhotons(aTrack,edepi);
-
-        num_points++;
-
-		nphot=edepi.NumPhotons();
-
-        edeposit = edeposit + edepi.Energy();
-		nphot+=edepi.NumSPhotons();
-        num_fastph +=edepi.NumFPhotons();
-        num_slowph +=edepi.NumSPhotons();
-
-	    mf::LogTrace("OpticksInterface:executeEvent")
-	    << "Total points: " << num_points << ", total fast photons: " << num_fastph
-	    << ", total slow photons: " << num_slowph << "\ndetected fast photons: " << num_fastdp
-	    << ", detected slow photons: " << num_slowdp;
-	}
-
-	Simulate();
-	if(obtrHelpers.size()>0){
-		for (auto& opbtr: obtrHelpers)
-			records->emplace_back(opbtr.second);
-		event.put(std::move(records));
-	} else std::cout << "obtrHelper seems empty ...." << std::endl;
-
-
-	Trackmps->clear();
-	delete Trackmps;
-	Trackmps=nullptr;
-	eventID++;
   }
 
 

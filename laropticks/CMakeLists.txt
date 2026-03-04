@@ -1,5 +1,4 @@
 cet_make_library(LIBRARY_NAME GPUPhotonPropagation INTERFACE
-        SOURCE ILArOpticks.h
         LIBRARIES INTERFACE
         lardataobj::Simulation
         nusimdata::SimulationBase
