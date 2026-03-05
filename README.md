@@ -1,4 +1,4 @@
-# Opticks-Tool for LArSoft.
+# Opticks Module for LArSoft.
 
 ## ⚙️ Prerequisites
 - **CUDA Toolkit 13 Update 2 (Tested)**
