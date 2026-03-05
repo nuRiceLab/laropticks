@@ -1,7 +1,7 @@
 
 #include "laropticks/include/OpticksHitHandler.h"
 
-namespace phot{
+namespace laropticks{
 
   // Opticks Hit Collection
   // Handles getting hits from opticks to a file
@@ -83,10 +83,6 @@ namespace phot{
      //G4CXOpticks::Get()->reset(feventID);
      //QSim::Get()->reset(feventID);
   }
-	// BackTracker goes here
-  std::vector<sim::OpDetBacktrackerRecord> * OpticksHitHandler::GetOpDetBacktrackerRecords(std::map<int,sim::OpDetBacktrackerRecord> *fOpBTMap,int TrackId,double edep)
-  {
-	return {};
-  }
+
 
 }

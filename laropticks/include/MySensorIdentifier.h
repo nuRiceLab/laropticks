@@ -21,7 +21,7 @@
 #include "G4LogicalVolume.hh"
 #include "G4SDManager.hh"
 
-namespace phot {
+namespace laropticks {
 
   class MySensorIdentifier : public U4SensorIdentifier{
 

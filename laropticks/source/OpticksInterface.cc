@@ -6,6 +6,7 @@
 using namespace xercesc;
 
 namespace laropticks{
+	OpticksInterface * OpticksInterface::instance = nullptr;
 
 // Initialize Opticks and Its Libraries
   void OpticksInterface::init(){
@@ -210,13 +211,20 @@ namespace laropticks{
 	{
         mf::LogTrace("OpticksInterface::beginJob") << " Opticks Initialization";
 		std::cout << "Begin Job" << std::endl;
+        // Initialize the variables
+
 		// initialize the parser
   		XMLPlatformUtils::Initialize();
 
  		//Getting the GDMLPATH incase we need it
-	    GDMLPath = fGeom.GDMLFile();
-		std::cout << "GDMLPath " << GDMLPath << std::endl;
-		eventID=0;
+  		fGeom = lar::providerFrom<geo::Geometry>();
+	    GDMLPath = fGeom->GDMLFile();
+        OpticksSensorIdentifier=nullptr;
+		OpticksHits=nullptr;
+		DetectorIds={};
+		World=nullptr;
+	    Trackmps=nullptr;
+
   	}
 
 
@@ -224,18 +232,19 @@ namespace laropticks{
 	/*!
 	* Simulate photons per art Event \c art::Event .
 	*/
-    OpticksInterface::UPVecBTR OpticksInterface::executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist);
+    OpticksInterface::UPVecBTR OpticksInterface::executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist)
     {
   		if(!World) init();
 		// init tracking
         SetParticleList(plist);
 
+		eventID=EventID;
 		if(Trackmps==nullptr) initTracks();
 		std::cout << "OpticksInterface::executeEvent" << std::endl;
 
         mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
 		// Optical Back Tracker
-  		//fOpDetBacktrackerMap = nullptr;
+
 
 		auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
 
@@ -345,9 +354,6 @@ namespace laropticks{
 
     }
 
-	void OpticksInterface::InitializeTools( CLHEP::HepRandomEngine& poisson, CLHEP::HepRandomEngine& scint_time) 	{
- 		// Opticks doesn't need this class, leave empty.
-       }
 
 	void OpticksInterface::initFileManager() {
     	// Get the analysis manager

@@ -3,7 +3,7 @@
 
 
 
-namespace phot{
+namespace laropticks {
 
   MySensorIdentifier::MySensorIdentifier(std::map<G4String, G4int> &ids) : fDetectIds(ids) {
 

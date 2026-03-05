@@ -81,16 +81,15 @@ class OpticksHitHandler;
       using VecSED = std::vector<sim::SimEnergyDeposit>;
       using UPVecBTR = std::unique_ptr<std::vector<sim::OpDetBacktrackerRecord>>;
 
-      static  OpticksInterface& GetInstance (){
-          static OpticksInterface instance;
-          return instance
+      static OpticksInterface* GetInstance(){
+    	 if(instance== nullptr){
+    		instance = new OpticksInterface();
+    	 }
+    	 return instance;
       }
 
-      // Construct with fcl parameters
-      OpticksInterface()=default;
 
-      // Default destructor
-      ~OpticksInterface()=default;
+
 
       void init();
       void initPhotonDetectors();
@@ -102,16 +101,15 @@ class OpticksHitHandler;
       UPVecBTR executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist);
 
 	  // Initialize fast simulation
-	  void beginJob() override;
+	  void beginJob() ;
 
 	  // Execute simulation on a single art::Event
-	  UPVecBTR executeEvent(VecSED const& edeps) override;
+	  UPVecBTR executeEvent(VecSED const& edeps);
 	  void initTracks();
-	  void SetParticleList(std::vector<simb::MCParticle> const* plist) override;
+	  void SetParticleList(std::vector<simb::MCParticle> const* plist);
 	  //simb::MCParticle * FindParticle(int TrackID);
 	  // Finalize execution
-	  void endJob() override;
-      void InitializeTools(CLHEP::HepRandomEngine& poisson, CLHEP::HepRandomEngine& scint_time) override;
+	  void endJob();
       template <typename T>
       void ReleaseMemory(std::vector<T*> &vec, const std::string& msg) {
 			 std::cout << "ReleasingMemory for " <<msg << std::endl;
@@ -121,6 +119,8 @@ class OpticksHitHandler;
 	  }
 
 	  private:
+    	// Construct with fcl parameters
+      OpticksInterface(){};
       std::string GDMLPath;
       MySensorIdentifier * OpticksSensorIdentifier;
       OpticksHitHandler* OpticksHits;
@@ -133,12 +133,12 @@ class OpticksHitHandler;
 	  std::vector<G4TouchableHistory*> fTouchableHistories;
 	  std::vector<G4DynamicParticle*> fDynamicParticles;
 	  G4VPhysicalVolume* World;
-	  //std::map<int,sim::OpDetBacktrackerRecord> *fOpDetBacktrackerMap;
 	  int trackID;
-	  geo::GeometryCore const& fGeom;
+	  geo::GeometryCore const* fGeom;
 	  std::map<int,G4Track*> *Trackmps;
 	  std::map<int, sim::OBTRHelper> obtrHelpers;
 	  int eventID;
+      static OpticksInterface* instance;
   };
 }
 

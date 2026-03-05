@@ -1,7 +1,6 @@
 #include "LArG4_dune.fcl"
 #include "IonAndScint_dune.fcl"
 #include "services_dune.fcl"
-#include "opticks_tool.fcl"
 #include "larproperties.fcl"
 
 
@@ -42,8 +41,8 @@ physics:
      largeant:    @local::dunefd_larg4
      IonAndScint: @local::dunefd_ionandscint
      optical:  {
-        module_type : OpticalPropagation
-        OpticalPropagationTools: @local::Opticks
+                      module_type : PDFullSimOpticks
+                      SimulationLabel:       "IonAndScint"
      }
      rns:         { module_type: "RandomNumberSaver" }
   }

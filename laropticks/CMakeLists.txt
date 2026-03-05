@@ -1,20 +1,14 @@
-cet_make_library(LIBRARY_NAME GPUPhotonPropagation INTERFACE
-        LIBRARIES INTERFACE
-        lardataobj::Simulation
-        nusimdata::SimulationBase
-)
-
-cet_make_library(LIBRARY_NAME_VAR module_libs
+add_compile_options(-gdwarf-4)
+cet_build_plugin(PDFullSimOpticks art::EDProducer
         SOURCE
+        PDFullSimOpticks_module.cc
         source/OpticksInterface.cc
         source/MySensorIdentifier.cc
         source/OpticksHitHandler.cc
         source/AnalysisManagerHelper.cc
-        PUBLIC
-        laropticks::GPUPhotonPropagation
+        LIBRARIES PUBLIC
         Opticks::G4CX
         Opticks::U4
-        OpticalPropagationTools
         messagefacility::MF_MessageLogger
         art::Framework_Principal
         larcore::ServiceUtil
@@ -34,22 +28,6 @@ cet_make_library(LIBRARY_NAME_VAR module_libs
         fhiclcpp::fhiclcpp
         CLHEP::Random
         nusimdata::SimulationBase
-)
-
-
-add_compile_options(-gdwarf-4)
-
-cet_write_plugin_builder(laropticks::GPUPhotonPropagation
-        art::EDProducer Modules
-        INSTALL_BUILDER
-        LIBRARIES CONDITIONAL ${module_libs}
-)
-
-include (laropticks::GPUPhotonPropagation)
-
-cet_build_plugin(PDFullSimOpticks laropticks::GPUPhotonPropagation
-        LIBRARIES PRIVATE
-        ${module_libs}
         cetlib_except::cetlib_except
 )
 
@@ -57,4 +35,3 @@ add_subdirectory(include)
 add_subdirectory(source)
 add_subdirectory(fcl)
 add_subdirectory(GDML)
-add_subdirectory(examples)

@@ -11,9 +11,10 @@
 #ifndef GDMLOPTICKS_ANALYSISMANAGERHELPER_HH
 #define GDMLOPTICKS_ANALYSISMANAGERHELPER_HH
 
+namespace laropticks {
 
 class AnalysisManagerHelper
-{
+  {
     public:
          static AnalysisManagerHelper* getInstance(){
                     G4AutoLock lock(&mtx);
@@ -53,7 +54,6 @@ class AnalysisManagerHelper
         G4double Duration{0};
         std::map<G4String,G4int> * fDetectIds{nullptr};
 
-
-};
-
+  };
+}
 #endif //GDMLOPTICKS_ANALYSISMANAGERHELPER_HH

@@ -1,7 +1,7 @@
 /**
  *  Class: PDFullSimOpticks
  *  Plugin Type: producer
- *  File: laropticks/PDFullSimOpticks_Module.cc
+ *  File: laropticks/PDFullSimOpticks_module.cc
  *  Author: Ilker Parmaksiz
  *  Experiment: DUNE
  *  Institution: Rice University
@@ -56,12 +56,12 @@
 // laropticks
 #include "laropticks/include/OpticksInterface.h"
 
-// Geant4
-
 
 namespace laropticks {
   class PDFullSimOpticks : public art::EDProducer {
   public:
+      using VecSED = std::vector<sim::SimEnergyDeposit>;
+      using UPVecBTR = std::unique_ptr<std::vector<sim::OpDetBacktrackerRecord>>;
     // Define the fhicl configuration
     struct Config {
         using Name = fhicl::Name;
@@ -80,14 +80,10 @@ namespace laropticks {
     void produce(art::Event&) override;
     void beginJob() override;
     void endJob() override;
+    UPVecBTR executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist);
 
   private:
-
-    std::vector<geo::Point_t> opDetCenters() const;
-    // geometry properties
-    geo::GeometryCore const& fGeom;
-    const size_t fNOpChannels;
-    const std::vector<geo::Point_t> fOpDetCenter;
+	const art::InputTag fSimTag;
     OpticksInterface* opticks;
   };
 
@@ -95,9 +91,9 @@ namespace laropticks {
   /*!
    * Construct with fhicl parameters if there is any.
    */
-  PDFullSimOpticks(Parameters const& config) : art::EDProducer{config}
-                                             , fNOpChannels(fGeom.NOpDets())
-                                             , fOpDetCenter(opDetCenters())
+  PDFullSimOpticks::PDFullSimOpticks(Parameters const& config) : art::EDProducer{config}
+											   ,fSimTag(config().SimulationLabel())
+											   ,opticks(nullptr)
 {
 
      mf::LogInfo("PDFullSimOpticks") << "Initializing PDFullSimOpticks." << std::endl;
@@ -112,7 +108,7 @@ namespace laropticks {
 
 
   //......................................................................
-  void PDFastSimPAR::produce(art::Event& event)
+  void PDFullSimOpticks::produce(art::Event& event)
   {
      mf::LogTrace("PDFullSimOpticks") << "PDFullSimOpticks Module Producer"
                               << "EventID: " << event.event();
@@ -125,39 +121,26 @@ namespace laropticks {
 
     auto mcHandle = event.getValidHandle<std::vector<simb::MCParticle>>("largeant");
 
-    auto const& edeps = edepHandle;
+
 
     // Include energy deposits here
-    auto result=opticks->executeEvent(event.event(),edepHandle,mcHandle);
+    auto result=opticks->executeEvent(event.event(),*(edepHandle.product()),mcHandle);
 
     event.put(std::move(result));
 
   }
 
-
-  //......................................................................
-  std::vector<geo::Point_t> PDFastSimPAR::opDetCenters() const
-  {
-    std::vector<geo::Point_t> opDetCenter;
-    for (size_t const i : ::ranges::views::ints(size_t(0), fNOpChannels)) {
-      geo::OpDetGeo const& opDet = fGeom.OpDetGeoFromOpDet(i);
-      opDetCenter.push_back(opDet.GetCenter());
-    }
-    return opDetCenter;
-  }
-  // ---------------------------------------------------------------------------
-
 } // namespace laropticks
 
 //--------------------Begin Job----------------------------------------------//
-void phot::OpticalPropagation::beginJob()
+void laropticks::PDFullSimOpticks::beginJob()
 {
   mf::LogTrace("PDFullSimOpticks") << "beginJob" << std::endl;
   opticks->beginJob();
 }
 
 //--------------------End Job---------------------------------------------//
-void phot::OpticalPropagation::endJob()
+void laropticks::PDFullSimOpticks::endJob()
 {
   mf::LogTrace("PDFullSimOpticks") << "endJob" << std::endl;
   opticks->endJob();

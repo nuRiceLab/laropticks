@@ -34,7 +34,7 @@
 #include "cetlib_except/exception.h"
 
 
-namespace phot{
+namespace laropticks {
 
   class OpticksHitHandler {
     public:
@@ -66,8 +66,6 @@ namespace phot{
         void AddHits();
         void SaveHits();
 
-		std::vector<sim::OpDetBacktrackerRecord> * GetOpDetBacktrackerRecords(std::map<int,sim::OpDetBacktrackerRecord> *fOpBTMap,int TrackId,double edep);
-
     private:
         OpticksHitHandler(){};
         static OpticksHitHandler * instance;
@@ -76,7 +74,6 @@ namespace phot{
         std::vector<OpticksHit> hits;
 		G4TouchableHistory *fTouchableHistory;
 		int feventID;
-
   };
 
 }

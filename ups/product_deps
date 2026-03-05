@@ -86,7 +86,7 @@
 #
 #>  define_pythonpath
 ####################################
-parent		larsim
+parent		laropticks
 defaultqual	e26
 ####################################
 

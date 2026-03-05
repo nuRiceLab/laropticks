@@ -8,7 +8,6 @@
 #include "IonAndScint_dune.fcl"
 #include "elecdrift_dune.fcl"
 #include "services_dune.fcl"
-#include "opticks_tool.fcl"
 #include "larproperties_lartpcdetector.fcl"
 
 process_name: G4
@@ -54,8 +53,8 @@ physics:
      IonAndScintExternal: @local::dunefdvd_ionandscint_external
      elecDrift:   @local::dunefd_elecdrift
      optical:  {
-        module_type : OpticalPropagation
-        OpticalPropagationTools: @local::Opticks
+                 module_type : PDFullSimOpticks
+                 SimulationLabel:       "IonAndScint"
      }
 
      rns:         { module_type: "RandomNumberSaver" }
