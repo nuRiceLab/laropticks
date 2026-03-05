@@ -84,8 +84,8 @@ namespace laropticks{
 
       mf::LogTrace("OpticksInterface::CollectPhotons") << "Collecting Photons";
 
-      U4::CollectGenstep_DsG4Scintillation_r4695(track, astep, edep.NumFPhotons(), 0, pTable->GetConstProperty(kFASTTIMECONSTANT));
-      U4::CollectGenstep_DsG4Scintillation_r4695(track, astep, edep.NumSPhotons(), 1, pTable->GetConstProperty(kSLOWTIMECONSTANT));
+      U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumFPhotons(), 0, pTable->GetConstProperty(kFASTTIMECONSTANT),edep.TrackID());
+      U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumSPhotons(), 1, pTable->GetConstProperty(kSLOWTIMECONSTANT),edep.TrackID());
 
       int CollectedPhotons=SEvt::GetNumPhotonCollected(0);
       int maxPhoton=SEventConfig::MaxPhoton();
@@ -227,7 +227,6 @@ namespace laropticks{
 
   	}
 
-
 	//-------------------------------------------------------------------------//
 	/*!
 	* Simulate photons per art Event \c art::Event .
@@ -272,6 +271,7 @@ namespace laropticks{
 			std::cout<<"No Track Found"<<std::endl;
 			assert(false);
 		}
+
         for (auto const& edepi : edeps) {
             if (!(num_points % 1000))
 			{
