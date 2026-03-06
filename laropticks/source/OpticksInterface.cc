@@ -25,6 +25,9 @@ namespace laropticks{
 
 	  World = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking()->GetWorldVolume();
 
+	  // Assign Logical and Physical Store Instances
+	  lvStore = G4LogicalVolumeStore::GetInstance();
+	  phyStore = G4PhysicalVolumeStore::GetInstance();
 
       // Initialize
       initPhotonDetectors();
@@ -105,7 +108,6 @@ namespace laropticks{
   void OpticksInterface::Simulate(){
 
       mf::LogTrace("OpticksInterface::Simulate") << "Initiation GPU Simulation";
-	  std::cout << "OpticksInterface::Simulate" << std::endl;
       G4CXOpticks * g4xc=G4CXOpticks::Get();
       //Event id needed in here
 
@@ -140,65 +142,100 @@ namespace laropticks{
   			assert(false);
   		}
 
-	 G4int count=0;
-	 G4int sid=0;
+
+
 
 	// This is a minimal parser to get auxilary values from gdml and assign them to detector logical volumes
-  	XercesDOMParser parser;
-  	parser.parse((GDMLPath).c_str());
 
-  	DOMDocument* doc = parser.getDocument();
-  	DOMElement* root = doc->getDocumentElement();
+  	unsigned int nChannels = fGeom->NOpDets();
+  	std::string volName,detName,CryoName;
+	int sid=0;
+  	int count=0;
 
-  	// Find all <volume> elements
-  	DOMNodeList* volumes = root->getElementsByTagName(XMLString::transcode("volume"));
-  	G4LogicalVolumeStore* lvStore = G4LogicalVolumeStore::GetInstance();
-  	G4LogicalVolume* lv=nullptr;
+  	G4VPhysicalVolume * physv1=nullptr;
+	if(nChannels>0){
+		std::cout << "Collecting Detector Info From LArSoft .....";
+		std::cout << "Number of PhotonDetectors " <<  fGeom->NOpDets() <<std::endl;
+		// Getting the volume name that photons are comming from before reaching optical detector
+		auto cryoID = fGeom->PositionToCryostatID(fGeom->OpDetGeoFromOpDet(0).GetCenter()); // Assuming this name common for all Cryos
+		auto const& cryo = fGeom->Cryostat(cryoID);  // Get Cryo object
+		auto cryoCenter = cryo.GetCenter();   // Get the Cryo Center
+		CryoName=GetVolumeName(fGeom->VolumeName(cryoCenter))+"_PV";        // Obtain the volume name from the center
+		physv1=phyStore->GetVolume(CryoName);  // Find the volume associated with the CryonName
+		if(!physv1) {
+			std::cout << "could nt find the physical volume " << CryoName << std::endl;
+			assert(false);
+		}
+		// Loop through each detector and generate surfaces for sensitive detectors
+		// Map Detector IDs to Detector Names so Opticks knows about the sensitive detectors
 
-  	for (XMLSize_t i = 0; i < volumes->getLength(); ++i) {
-  		DOMElement* vol = dynamic_cast<DOMElement*>(volumes->item(i));
-  		std::string volName = XMLString::transcode(vol->getAttribute(XMLString::transcode("name")));
-
-  		// Find all <aux> children
-  		DOMNodeList* auxList = vol->getElementsByTagName(XMLString::transcode("auxiliary"));
-
-  		for (XMLSize_t j = 0; j < auxList->getLength(); ++j) {
-  			DOMElement* aux = dynamic_cast<DOMElement*>(auxList->item(j));
-
-  			std::string type  = XMLString::transcode(aux->getAttribute(XMLString::transcode("auxtype")));
-  			std::string value = XMLString::transcode(aux->getAttribute(XMLString::transcode("auxvalue")));
-
-  			// Assign Skin Surfaces
-  			if (type=="Surface"){
-				lv=lvStore->GetVolume(volName);
-
-				if(lv)
-				{
-  					new G4LogicalSkinSurface(volName+"_Surface",lv,ArapucaSurface);
-				}
-				else std::cout << "Cant find logical volume for " << volName << std::endl;
-  				count++;
-  			}
-
-  			if (type=="PD" and value=="PhotonDetector")
-  			{
-  				G4cout << "Attaching sensitive detector " << value
-						 << " to volume " << volName
-						 <<  G4endl << G4endl;
-  				obtrHelpers.emplace(sid,sid);
-  				DetectorIds.insert(std::pair<G4String,G4int>(volName+"_PV",sid++));
-  			}
-  		}
-  	}
-		/*
-	    std::cout << "Num of Channels " <<  fGeom.NOpDets() <<std::endl;
-  		unsigned int nChannels = fGeom.NOpDets();
 		for (size_t i =0 ; i < nChannels; ++i) {
-			geo::OpDetGeo const& opDet = fGeom.OpDetGeoFromOpDet(i);
-			//std::cout << " ID " <<opDet.ID() << " Center " << opDet.GetCenter() <<  std::endl;
-			std::string info=opDet.OpDetInfo();
-			std::cout << info << std::endl;
-		}*/
+			geo::OpDetGeo const& opDet = fGeom->OpDetGeoFromOpDet(i);
+
+			//std::cout << opDet.OpDetInfo() << std::endl;
+			volName=GetVolumeName(fGeom->VolumeName(opDet.GetCenter()));// Get Detector Name by its position and remove the cryoID
+
+			detName=volName+"_PV"; // Assign PV to end of the string since G4 likes this
+			sid=opDet.ID().OpDet; // Assign the sensor ID
+			obtrHelpers.emplace(sid,sid); // Define the channels for backtrackerhelper
+			DetectorIds.insert(std::pair<G4String,G4int>(detName,sid)); // map detector ids to detector names
+
+			// Generate Skin or Border Surface
+			//createG4SkinSurface(volName,ArapucaSurface);
+			createG4BorderSurface(physv1,detName,ArapucaSurface);
+		}
+
+	}
+    else {
+		std::cout << "Detectors are nt initialized by LArSoft! We manually parse them here... " << std::endl;
+  		XercesDOMParser parser;
+  		parser.parse((GDMLPath).c_str());
+
+  		DOMDocument* doc = parser.getDocument();
+  		DOMElement* root = doc->getDocumentElement();
+
+  		// Find all <volume> elements
+  		DOMNodeList* volumes = root->getElementsByTagName(XMLString::transcode("volume"));
+
+		physv1=nullptr;
+
+  		for (XMLSize_t i = 0; i < volumes->getLength(); ++i) {
+  			DOMElement* vol = dynamic_cast<DOMElement*>(volumes->item(i));
+  			volName = XMLString::transcode(vol->getAttribute(XMLString::transcode("name")));
+
+  			// Find all <aux> children
+  			DOMNodeList* auxList = vol->getElementsByTagName(XMLString::transcode("auxiliary"));
+
+  			for (XMLSize_t j = 0; j < auxList->getLength(); ++j) {
+  				DOMElement* aux = dynamic_cast<DOMElement*>(auxList->item(j));
+
+  				std::string type  = XMLString::transcode(aux->getAttribute(XMLString::transcode("auxtype")));
+  				std::string value = XMLString::transcode(aux->getAttribute(XMLString::transcode("auxvalue")));
+
+  				// Assign  Skin or Border Surfaces
+  				if (type=="Surface"){
+  					// Generate Skin or Border Surface
+  					//createG4SkinSurface(volName,surface);
+					if(physv1==nullptr) physv1=phyStore->GetVolume(value+"_PV");
+
+  					detName=volName+"_PV";
+  					createG4BorderSurface(physv1,detName,ArapucaSurface);
+  					count++;
+  				}
+
+  				if (type=="PD" and value=="PhotonDetector")
+  				{
+  					//std::cout << "Attaching sensitive detector " << value << " to volume " << volName+"_PV" << std::endl ;
+
+
+  					obtrHelpers.emplace(sid,sid);
+  					DetectorIds.insert(std::pair<G4String,G4int>(volName+"_PV",sid++));
+  				}
+  			} // nested loop
+  		}	// first loop
+	} //else
+
+
 
  }
 
@@ -324,6 +361,7 @@ namespace laropticks{
 		delete Trackmps;
 		Trackmps=nullptr;
 		eventID++;
+
 		return records ;
 	}
 
@@ -387,6 +425,7 @@ namespace laropticks{
 	void OpticksInterface::initTracks(){
 		std::cout << "OpticksInterface::initTracks" << std::endl;
 		std::cout << "Setting up Tracks" << std::endl;
+
 		Trackmps = new std::map<int, G4Track*>();
 		for (size_t ip=0; ip<fParticleList->size(); ip++){
 			auto mp = fParticleList->at(ip);
@@ -405,6 +444,35 @@ namespace laropticks{
 			fDynamicParticles.push_back(DParticle);
 			Trackmps->insert( std::make_pair(mp.TrackId(), trk) );
 		}
+	}
+	void OpticksInterface::createG4SkinSurface(std::string VolName, G4OpticalSurface* surface){
+		mf::LogTrace("OpticksInterface::createG4SkinSurface")  << "Creating Skin Surface ..."<< std::endl;
+  		// find the logical volume associated with the volume name
+		auto lv=lvStore->GetVolume(VolName);
+
+  		if(lv)  new G4LogicalSkinSurface(VolName+"_SkinSurface",lv,surface);
+  		else std::cout << "Cant find logical volume for " << VolName << std::endl;
+	}
+
+	void OpticksInterface::createG4BorderSurface(G4VPhysicalVolume *phyv1, std::string v2, G4OpticalSurface* surface){
+  		mf::LogTrace("OpticksInterface::createBorderSurface")  << "Creating Border Surface ..." << std::endl;
+		if(phyv1==nullptr){
+			std::cout << "Physical Volume pointer is empty!!" << std::endl;
+			assert(false);
+		}
+  		auto phyv2=phyStore->GetVolume(v2);
+
+  		if(phyv2) new G4LogicalBorderSurface(v2+"_BorderSurface", phyv1, phyv2, surface);
+  		else std::cout << "Cant find physical volume for " << v2 << std::endl;
+    }
+
+	std::string OpticksInterface::GetVolumeName(const std::string& s){
+		// Find the last '_' and get the any string before it.
+		// Intension behind this to remove  the Cryostat ID from the names such as  VolumeName_CryoID
+  		mf::LogTrace("OpticksInterface::GetVolumeName")  << "Removing cryostat id from detector names..."<< std::endl;
+
+  		size_t pos = s.rfind('_');
+  		return (pos == std::string::npos) ? s : s.substr(0, pos);
 	}
 
 }

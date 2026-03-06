@@ -96,7 +96,7 @@ namespace laropticks {
 											   ,opticks(nullptr)
 {
 
-     mf::LogInfo("PDFullSimOpticks") << "Initializing PDFullSimOpticks." << std::endl;
+    mf::LogInfo("PDFullSimOpticks") << "Initializing PDFullSimOpticks." << std::endl;
 
 
     // Initialize OpDetBacktrackerRecord

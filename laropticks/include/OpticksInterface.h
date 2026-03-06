@@ -43,6 +43,7 @@
 // Geant4 Headers
 #include "G4LogicalSkinSurface.hh"
 #include "G4OpticalSurface.hh"
+#include "G4LogicalBorderSurface.hh"
 #include "G4VPhysicalVolume.hh"
 #include "G4Material.hh"
 #include "g4root.hh"
@@ -64,11 +65,12 @@
 #include "G4Step.hh"
 #include "G4StepPoint.hh"
 #include "G4TouchableHistory.hh"
-
+#include "G4PhysicalVolumeStore.hh"
 // Xercesc
 #include "xercesc/util/PlatformUtils.hpp"
 #include "xercesc/parsers/XercesDOMParser.hpp"
 #include "xercesc/dom/DOM.hpp"
+
 
 namespace laropticks {
 
@@ -97,7 +99,9 @@ class OpticksHitHandler;
       void CollectPhotons(G4Track *track,sim::SimEnergyDeposit edep);
       void GetHitsFromGPU();
       void Simulate();
-
+	  void createG4SkinSurface(std::string VolName, G4OpticalSurface* surface);
+	  void createG4BorderSurface(G4VPhysicalVolume *phyv1, std::string v2, G4OpticalSurface* surface);
+	  std::string GetVolumeName(const std::string& s);
       UPVecBTR executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist);
 
 	  // Initialize fast simulation
@@ -134,11 +138,14 @@ class OpticksHitHandler;
 	  std::vector<G4DynamicParticle*> fDynamicParticles;
 	  G4VPhysicalVolume* World;
 	  int trackID;
+	  int eventID;
 	  geo::GeometryCore const* fGeom;
 	  std::map<int,G4Track*> *Trackmps;
 	  std::map<int, sim::OBTRHelper> obtrHelpers;
-	  int eventID;
+	  G4PhysicalVolumeStore* phyStore;
+	  G4LogicalVolumeStore* lvStore;
       static OpticksInterface* instance;
+
   };
 }
 
