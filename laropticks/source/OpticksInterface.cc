@@ -50,6 +50,11 @@ namespace laropticks{
   void OpticksInterface::CollectPhotons(G4Track *track,sim::SimEnergyDeposit edep){
 	  //std::cout << "Collecting Photons .." << std::endl;
       // Example of getting material properties
+	  if(!track){
+		std::cout << "Null Track !! TrkID " << edep.TrackID() << std::endl;
+		 return;
+	 }
+
 	  G4ThreeVector startPoint=G4ThreeVector(edep.StartX(),edep.StartY(),edep.StartZ());
 	  G4ThreeVector endPoint=G4ThreeVector(edep.EndX(),edep.EndY(),edep.EndZ());
 
@@ -66,6 +71,7 @@ namespace laropticks{
 	  if(!pTable){
 			std::cout << "Material Name " <<  mat->GetName() << std::endl;
 			std::cout << "Null Material Properties Table" << std::endl;
+			return;
 		}
 
 	  G4Step * astep = new G4Step();
@@ -296,18 +302,12 @@ namespace laropticks{
   	    int nphot;
   		double edeposit;
 
-		std::cout << "Amount of Particles " << fParticleList->size() << std::endl;
 		// Get The Parent Information
 		std::cout << " Size of Energy Depositions " <<  edeps.size() << std::endl;
 		G4Track * aTrack=nullptr;
 
-		int tempTrackID=edeps.at(0).TrackID();
-		auto it = Trackmps->find(tempTrackID);
-		if (it != Trackmps->end()) aTrack = it->second;
-		else {
-			std::cout<<"No Track Found"<<std::endl;
-			assert(false);
-		}
+		int tempTrackID=-1;
+
 
         for (auto const& edepi : edeps) {
             if (!(num_points % 1000))
@@ -323,13 +323,15 @@ namespace laropticks{
 
             }
 			if (tempTrackID != edepi.TrackID()){
-				std::cout << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() << std::endl;
 				tempTrackID = edepi.TrackID();
-				it = Trackmps->find(tempTrackID);
-				if (it != Trackmps->end()) aTrack = it->second;
+				auto it = Trackmps->find(tempTrackID );
+				if (it != Trackmps->end()){
+					aTrack = it->second;
+					std::cout << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() << std::endl;
+				}
 				else {
-					std::cout<<"No Track Found"<<std::endl;
-					assert(false);
+					std::cout<<"No Track Found for TrkID " << tempTrackID <<std::endl;
+					continue;
 				}
 			}
 			CollectPhotons(aTrack,edepi);
@@ -360,7 +362,6 @@ namespace laropticks{
 		Trackmps->clear();
 		delete Trackmps;
 		Trackmps=nullptr;
-		eventID++;
 
 		return records ;
 	}
@@ -425,6 +426,7 @@ namespace laropticks{
 	void OpticksInterface::initTracks(){
 		std::cout << "OpticksInterface::initTracks" << std::endl;
 		std::cout << "Setting up Tracks" << std::endl;
+		std::cout << "Amount of Particles " << fParticleList->size() << std::endl;
 
 		Trackmps = new std::map<int, G4Track*>();
 		for (size_t ip=0; ip<fParticleList->size(); ip++){
@@ -433,10 +435,8 @@ namespace laropticks{
 
 			G4DynamicParticle * DParticle= new G4DynamicParticle(pdef,G4ThreeVector(mp.Px(0),mp.Py(0),mp.Pz(0)),mp.E(0));
 			auto trk =new G4Track(DParticle,mp.T(),G4ThreeVector(mp.Vx(0),mp.Vy(0),mp.Vz(0)));
-
-			trk->SetTrackID(mp.TrackId());
-			trackID = mp.TrackId();
-
+			trackID=mp.TrackId();
+			trk->SetTrackID(trackID);
 			trk->SetParentID(mp.Mother());
   			G4TrackStatus status = static_cast<G4TrackStatus>(mp.StatusCode());
 			trk->SetTrackStatus(status);
