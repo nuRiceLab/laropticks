@@ -52,6 +52,8 @@
 #include <map>
 #include <memory>
 #include <vector>
+// Geant4
+#include "G4VPhysicalVolume.hh"
 
 // laropticks
 #include "laropticks/include/OpticksInterface.h"
@@ -85,6 +87,7 @@ namespace laropticks {
   private:
 	const art::InputTag fSimTag;
     OpticksInterface* opticks;
+	G4VPhysicalVolume* World;
   };
 
   //--------------------Construct PDFullSimOpticks-----------------------------//
@@ -95,15 +98,16 @@ namespace laropticks {
 											   ,fSimTag(config().SimulationLabel())
 											   ,opticks(nullptr)
 {
-
     mf::LogInfo("PDFullSimOpticks") << "Initializing PDFullSimOpticks." << std::endl;
-
 
     // Initialize OpDetBacktrackerRecord
     produces<std::vector<sim::OpDetBacktrackerRecord>>();
 
     // Initialize Opticks
     opticks=OpticksInterface::GetInstance();
+	// Initialize the world volume
+	World=nullptr;
+	opticks->setWorld(World);
   }
 
 
@@ -114,20 +118,25 @@ namespace laropticks {
                               << "EventID: " << event.event();
 
     art::Handle<std::vector<sim::SimEnergyDeposit>> edepHandle;
-    if (!event.getByLabel(fSimTag, edepHandle)) {
-      mf::LogError("PDFullSimOpticks") << "PDFullSimOpticks Module Cannot getByLabel: " << fSimTag;
-      return;
-    }
-
     auto mcHandle = event.getValidHandle<std::vector<simb::MCParticle>>("largeant");
+	UPVecBTR result;
+
+	// Initialize some variables
+	if(!World) opticks->init(); // once
+    opticks->setParticleList(mcHandle); // per event
+	opticks->setEventID(event.event()); // per event
+  	mf::LogError("PDFullSimOpticks") << "PDFullSimOpticks Module getByLabel: " << fSimTag;
+
+	// For IonAndScint Photon Production
+    if (event.getByLabel(fSimTag, edepHandle)) result=opticks->executeEvent(*(edepHandle.product())); // Include energy deposits here
 
 
+	// Produce Photons Directly to Generate Visibility Maps
+   if (fSimTag == "LightSource") result=opticks->executeEvent();
 
-    // Include energy deposits here
-    auto result=opticks->executeEvent(event.event(),*(edepHandle.product()),mcHandle);
-
-    event.put(std::move(result));
-
+	// Copy the results
+	if (result) event.put(std::move(result));
+	else std::cout<<"PDFullSimOpticks, BackTracker Results Empty!" << std::endl;
   }
 
 } // namespace laropticks

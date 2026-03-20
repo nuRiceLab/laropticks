@@ -22,7 +22,7 @@ void SetAllTransparency(Int_t transp) {
 }
 
 // --- Main execution function for the macro ---
-void visualize_gdml(const char* filename, Int_t transparency = 70) {
+void gdml_visualization(const char* filename="/home/rice/Projects/DUNE_Opticks/laropticks/laropticks/GDML/dune10kt_v5_refactored_1x2x6_nowires_NoField.gdml", Int_t transparency = 70) {
 
     // 1. Load necessary libraries (Gdml and Geometry packages)
     gSystem->Load("libGeom");

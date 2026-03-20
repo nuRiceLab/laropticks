@@ -26,7 +26,7 @@ services.Geometry.GDML: "dune10kt_v2_1x2x6.gdml"
 services.AuxDetGeometry.GDML: @local::services.Geometry.GDML
 services.PhotonVisibilityService: @local::dune10kt_1x2x6_photonvisibilityservice
 services.LArPropertiesService.ScintPreScale: 0.0287
-
+services.LArG4Parameters.KeepEMShowerDaughters: true
 
 #source is now a root file
 #source:
@@ -54,7 +54,7 @@ physics:
      elecDrift:   @local::dunefd_elecdrift
      optical:  {
                  module_type : PDFullSimOpticks
-                 SimulationLabel:       "IonAndScint"
+                 SimulationLabel: "IonAndScint"
      }
 
      rns:         { module_type: "RandomNumberSaver" }

@@ -17,6 +17,7 @@
 #include "laropticks/include/MySensorIdentifier.h"
 #include "laropticks/include/OpticksHitHandler.h"
 #include "laropticks/include/AnalysisManagerHelper.h"
+#include "laropticks/include/GPUPrimaryPhoton.h"
 
 // LArSoft Headers
 #include "larcore/CoreUtils/ServiceUtil.h"
@@ -30,6 +31,7 @@
 #include "lardataobj/Simulation/OpDetBacktrackerRecord.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "fhiclcpp/ParameterSet.h"
 
 // Opticks Headers
 #include "G4CXOpticks.hh"
@@ -38,7 +40,8 @@
 #include "U4.hh"
 #include "SEventConfig.hh"
 #include "OPTICKS_LOG.hh"
-#include "fhiclcpp/ParameterSet.h"
+
+
 
 // Geant4 Headers
 #include "G4LogicalSkinSurface.hh"
@@ -102,15 +105,17 @@ class OpticksHitHandler;
 	  void createG4SkinSurface(std::string VolName, G4OpticalSurface* surface);
 	  void createG4BorderSurface(G4VPhysicalVolume *phyv1, std::string v2, G4OpticalSurface* surface);
 	  std::string GetVolumeName(const std::string& s);
-      UPVecBTR executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist);
+      UPVecBTR executeEvent(VecSED const& edeps); // Simulating photons produced by scintilation events
+      UPVecBTR executeEvent(); // This is for producing visibilities with primary photons
+
 
 	  // Initialize fast simulation
 	  void beginJob() ;
 
-	  // Execute simulation on a single art::Event
-	  UPVecBTR executeEvent(VecSED const& edeps);
 	  void initTracks();
-	  void SetParticleList(std::vector<simb::MCParticle> const* plist);
+	  void setEventID(int evt);
+	  void setWorld(G4VPhysicalVolume* fWorld);
+	  void setParticleList(std::vector<simb::MCParticle> const* plist);
 	  //simb::MCParticle * FindParticle(int TrackID);
 	  // Finalize execution
 	  void endJob();
@@ -145,8 +150,9 @@ class OpticksHitHandler;
 	  G4PhysicalVolumeStore* phyStore;
 	  G4LogicalVolumeStore* lvStore;
       static OpticksInterface* instance;
-
+	  GPUPrimaryPhoton * PhotonGen;
   };
+
 }
 
 #endif //OPTICKSINTERFACE_H

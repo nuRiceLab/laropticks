@@ -22,7 +22,6 @@ namespace laropticks{
   	  SEventConfig::Initialize();
 
       // Lets Parse the GDML to pass it to Opticks
-
 	  World = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking()->GetWorldVolume();
 
 	  // Assign Logical and Physical Store Instances
@@ -35,7 +34,7 @@ namespace laropticks{
 	  else throw cet::exception("DetectorIds") << "Missing DetectorIds";
 
       OpticksHits = OpticksHitHandler::getInstance();
-
+	  PhotonGen= GPUPrimaryPhoton::getInstance();
 
       // Set Geometry
       G4CXOpticks::SetSensorIdentifier(OpticksSensorIdentifier);
@@ -265,22 +264,34 @@ namespace laropticks{
         OpticksSensorIdentifier=nullptr;
 		OpticksHits=nullptr;
 		DetectorIds={};
-		World=nullptr;
 	    Trackmps=nullptr;
+  		PhotonGen=nullptr;
 
   	}
-
 	//-------------------------------------------------------------------------//
 	/*!
-	* Simulate photons per art Event \c art::Event .
+	* Simulate primary photons per art Event \c art::Event .
 	*/
-    OpticksInterface::UPVecBTR OpticksInterface::executeEvent(int EventID , VecSED const& edeps,std::vector<simb::MCParticle> const * plist)
-    {
-  		if(!World) init();
-		// init tracking
-        SetParticleList(plist);
+	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(){
+		std::cout << "OpticksInterface::executeEvent for primary photon production" << std::endl;
+  		std::cout << "Number of Primary Photons " << fParticleList->size() << std::endl;
+		double vx,vy,vz,px,py,pz,mx,my,mz, wavelength;
 
-		eventID=EventID;
+		for (size_t ip=0; ip<fParticleList->size(); ip++){
+  			auto mp = fParticleList->at(ip);
+
+  			//std::cout << "---- Particle Info ---- "<< std::endl;
+			//std::cout << "px,py,pz " <<mp.Px(0) << ", "  << mp.Py(0)  << ", "  << mp.Pz(0) << ", "  <<  mp.E(0) << std::endl;
+			//std::cout << "Vx,Vy,Vz " <<mp.Vx(0) << ", "  << mp.Vy(0)  << ", "  << mp.Vz(0) << ", "  <<  mp.E(0) << std::endl;
+		}
+		return {};
+	}
+	//-------------------------------------------------------------------------//
+	/*!
+	* Simulate scintilation photons per art Event \c art::Event .
+	*/
+    OpticksInterface::UPVecBTR OpticksInterface::executeEvent(VecSED const& edeps)
+    {
 		if(Trackmps==nullptr) initTracks();
 		std::cout << "OpticksInterface::executeEvent" << std::endl;
 
@@ -310,10 +321,10 @@ namespace laropticks{
 
 
         for (auto const& edepi : edeps) {
-            if (!(num_points % 1000))
+            if (!(num_points % 10000))
 			{
+
 			  std::cout <<" Opticks "
-              //mf::LogTrace("OpticksInterface")
                 << "SimEnergyDeposit: " << num_points << " " << edepi.TrackID() << " " << edepi.Energy()
                 << "\nStart: " << edepi.Start() << "\nEnd: " << edepi.End()
                 << "\nNF: " << edepi.NumFPhotons() << "\nNS: " << edepi.NumSPhotons()
@@ -321,13 +332,14 @@ namespace laropticks{
 				<< "PDG: " << edepi.PdgCode()<<"\n"
             	<< std::endl;
 
+
             }
-			if (tempTrackID != edepi.TrackID()){
-				tempTrackID = edepi.TrackID();
+			if (tempTrackID != std::abs(edepi.TrackID())){ // Adding abs function to combine daughter tracks to parent since daughter tracks have negative ids
+				tempTrackID = std::abs(edepi.TrackID());
 				auto it = Trackmps->find(tempTrackID );
 				if (it != Trackmps->end()){
 					aTrack = it->second;
-					std::cout << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() << std::endl;
+					//std::cout << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() << std::endl;
 				}
 				else {
 					std::cout<<"No Track Found for TrkID " << tempTrackID <<std::endl;
@@ -415,13 +427,6 @@ namespace laropticks{
   		analysisManager->FinishNtuple();
 	}
 
-	// Do nothing for PDFastSimPAr.cc
-	// This is mainly for opticks
-	void OpticksInterface::SetParticleList(std::vector<simb::MCParticle> const* plist)
-	{
-		fParticleList = plist;
-
-    }
 
 	void OpticksInterface::initTracks(){
 		std::cout << "OpticksInterface::initTracks" << std::endl;
@@ -443,6 +448,7 @@ namespace laropticks{
 			ftracks.push_back(trk);
 			fDynamicParticles.push_back(DParticle);
 			Trackmps->insert( std::make_pair(mp.TrackId(), trk) );
+			//std::cout << "TrackID " << trackID << " Pdgcode " << mp.PdgCode() << " parentID " << mp.Mother()<< std::endl;
 		}
 	}
 	void OpticksInterface::createG4SkinSurface(std::string VolName, G4OpticalSurface* surface){
@@ -473,6 +479,17 @@ namespace laropticks{
 
   		size_t pos = s.rfind('_');
   		return (pos == std::string::npos) ? s : s.substr(0, pos);
+	}
+
+	// Setting Some Global Parameters
+	void OpticksInterface::setParticleList(std::vector<simb::MCParticle> const * plist) {
+		fParticleList = plist;
+	}
+	void OpticksInterface::setEventID(int evt) {
+		eventID = evt;
+	}
+	void OpticksInterface::setWorld(G4VPhysicalVolume * fWorld) {
+		World = fWorld;
 	}
 
 }

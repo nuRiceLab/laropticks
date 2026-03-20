@@ -5,6 +5,7 @@ cet_build_plugin(PDFullSimOpticks art::EDProducer
         source/OpticksInterface.cc
         source/MySensorIdentifier.cc
         source/OpticksHitHandler.cc
+        source/GPUPrimaryPhoton.cc
         source/AnalysisManagerHelper.cc
         LIBRARIES PUBLIC
         Opticks::G4CX
