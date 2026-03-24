@@ -275,16 +275,20 @@ namespace laropticks{
 	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(){
 		std::cout << "OpticksInterface::executeEvent for primary photon production" << std::endl;
   		std::cout << "Number of Primary Photons " << fParticleList->size() << std::endl;
-		double vx,vy,vz,px,py,pz,mx,my,mz, wavelength;
 
-		for (size_t ip=0; ip<fParticleList->size(); ip++){
-  			auto mp = fParticleList->at(ip);
+        auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
+        double vx,vy,vz,px,py,pz,mx,my,mz, wavelength;
 
-  			//std::cout << "---- Particle Info ---- "<< std::endl;
-			//std::cout << "px,py,pz " <<mp.Px(0) << ", "  << mp.Py(0)  << ", "  << mp.Pz(0) << ", "  <<  mp.E(0) << std::endl;
-			//std::cout << "Vx,Vy,Vz " <<mp.Vx(0) << ", "  << mp.Vy(0)  << ", "  << mp.Vz(0) << ", "  <<  mp.E(0) << std::endl;
-		}
-		return {};
+        PhotonGen->setEventID(eventID);
+        PhotonGen->setObtrHelpers(obtrHelpers);
+        PhotonGen->CollectPhotons(fParticleList,0);
+
+        if(obtrHelpers.size()>0){
+		for (auto& opbtr: obtrHelpers)
+			records->emplace_back(opbtr.second);
+		} else std::cout << "obtrHelper seems empty ...." << std::endl;
+
+		return records;
 	}
 	//-------------------------------------------------------------------------//
 	/*!

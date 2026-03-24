@@ -4,13 +4,23 @@
  *  Experiment: DUNE
  *  Institution: Rice University
  *  Date: 3/18/26
- *  Description: Interface Library connects opticks to LArSoft/larsim
+ *  Description: GPUPrimaryPhoton simulation: simulates photons within GPU by reading photons produced by largeant4
  */
-#include "sphoton.h"
-//#include "storch.h"
+
 #ifndef LAROPTICKS_GPUPRIMARYPHOTON_H
 #define LAROPTICKS_GPUPRIMARYPHOTON_H
+// CUDA
+#include <curand_kernel.h>
+// Opticks
+#include "sphoton.h"
+#include "storch.h"
+#include "storchtype.h"
+// LArSoft
+#include "nusimdata/SimulationBase/MCParticle.h"
 
+//laropticks
+#include "laropticks/include/MySensorIdentifier.h"
+#include "laropticks/include/OpticksHitHandler.h"
 namespace laropticks {
 
     class GPUPrimaryPhoton
@@ -24,13 +34,28 @@ namespace laropticks {
                 return instance;
             };
             void reset();
+            void setEventID(int id);
             std::vector<sphoton> GetSPhotons();
-            void CollectPhotons(const sphoton& pht);
+            void setPhotons(std::vector<sphoton> sphotons);
+            void CollectPhotons(std::vector<simb::MCParticle> const* phtlist,unsigned int seed);
+            void Simulate();
+            void setObtrHelpers(std::map<int, sim::OBTRHelper> &obtrHs);
         private:
             GPUPrimaryPhoton(){};
             static GPUPrimaryPhoton * instance;
             std::vector<sphoton> photons;
+            int eventID;
+            std::map<int, sim::OBTRHelper> obtrHelpers;
     };
+
+    // Set Event ID for simulation
+    inline void GPUPrimaryPhoton::setEventID(int id){
+        eventID = id;
+    }
+    // Pass Backtracking info
+    inline void GPUPrimaryPhoton::setObtrHelpers(std::map<int, sim::OBTRHelper> &obtrHs){
+        obtrHelpers = obtrHs;
+    }
 }
 
 
