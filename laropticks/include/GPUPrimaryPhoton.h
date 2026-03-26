@@ -13,14 +13,14 @@
 #include <curand_kernel.h>
 // Opticks
 #include "sphoton.h"
-#include "storch.h"
-#include "storchtype.h"
+
 // LArSoft
 #include "nusimdata/SimulationBase/MCParticle.h"
 
 //laropticks
 #include "laropticks/include/MySensorIdentifier.h"
 #include "laropticks/include/OpticksHitHandler.h"
+
 namespace laropticks {
 
     class GPUPrimaryPhoton
@@ -33,12 +33,14 @@ namespace laropticks {
                 }
                 return instance;
             };
+
             void reset();
             void setEventID(int id);
             std::vector<sphoton> GetSPhotons();
             void setPhotons(std::vector<sphoton> sphotons);
             void CollectPhotons(std::vector<simb::MCParticle> const* phtlist,unsigned int seed);
             void Simulate();
+
             void setObtrHelpers(std::map<int, sim::OBTRHelper> &obtrHs);
         private:
             GPUPrimaryPhoton(){};
