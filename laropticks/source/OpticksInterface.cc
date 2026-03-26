@@ -112,7 +112,7 @@ namespace laropticks{
 
   void OpticksInterface::Simulate(){
 
-      mf::LogTrace("OpticksInterface::Simulate") << "Initiation GPU Simulation";
+      mf::LogTrace("OpticksInterface::Simulate") << "Initiation GPU Simulation for Event Number " << eventID;
       G4CXOpticks * g4xc=G4CXOpticks::Get();
       //Event id needed in here
 
@@ -281,13 +281,13 @@ namespace laropticks{
 
         PhotonGen->setEventID(eventID);
         PhotonGen->setObtrHelpers(obtrHelpers);
-        PhotonGen->CollectPhotons(fParticleList,0);
-
+        PhotonGen->CollectPhotonInfo(fParticleList);
+		PhotonGen->Batcher();
         if(obtrHelpers.size()>0){
 		for (auto& opbtr: obtrHelpers)
 			records->emplace_back(opbtr.second);
 		} else std::cout << "obtrHelper seems empty ...." << std::endl;
-
+		PhotonGen->reset();
 		return records;
 	}
 	//-------------------------------------------------------------------------//

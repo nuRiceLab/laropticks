@@ -21,6 +21,7 @@
 #include "laropticks/include/MySensorIdentifier.h"
 #include "laropticks/include/OpticksHitHandler.h"
 
+
 namespace laropticks {
 
     class GPUPrimaryPhoton
@@ -38,7 +39,8 @@ namespace laropticks {
             void setEventID(int id);
             std::vector<sphoton> GetSPhotons();
             void setPhotons(std::vector<sphoton> sphotons);
-            void CollectPhotons(std::vector<simb::MCParticle> const* phtlist,unsigned int seed);
+            void Batcher();
+            void CollectPhotonInfo(std::vector<simb::MCParticle> const* phtlist);
             void Simulate();
 
             void setObtrHelpers(std::map<int, sim::OBTRHelper> &obtrHs);
