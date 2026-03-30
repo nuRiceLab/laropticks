@@ -9,15 +9,18 @@ namespace laropticks
             for (size_t ip=0; ip<phtlist->size(); ip++)
 			{
                   sphoton spht;
+			      spht.zero_flags();
+    			  spht.set_flag(TORCH);
                   auto pht = phtlist->at(ip);
                   spht.pos=make_float3(pht.Vx(0),pht.Vy(0),pht.Vz(0));
                   spht.mom=make_float3(pht.Px(0),pht.Py(0),pht.Pz(0));
-                  spht.mom=make_float3(pht.Polarization()[0],pht.Polarization()[1],pht.Polarization()[2]);
-                  spht.wavelength=1240/(pht.E()/1000000); // nm
-				  std::cout << "Wavelength " << spht.wavelength << std::endl;
+                  spht.pol=make_float3(pht.Polarization()[0],pht.Polarization()[1],pht.Polarization()[2]);
+                  spht.wavelength=(1240)/(1E9*pht.E()); // nm
+				  //std::cout << "Wavelength " << spht.wavelength << " pht.E() " << pht.E() << std::endl;
                   spht.time=pht.T();
            		  spht.ParentId=-1;
                   photons.push_back(spht);
+
             }
       }
 
@@ -51,11 +54,11 @@ namespace laropticks
        	// Simulate in batch
        	if(CollectedPhotons>=maxPhoton)
 		{
-       		std::cout << "Simulating in Batch Mode ...." << std::endl;
+       		std::cout << "[GPUPrimaryPhoton::Batcher] Simulating in Batch Mode ...." << std::endl;
        		//Simulate();
        		for (std::size_t i =0 ; i < CollectedPhotons; i+=maxPhoton)
 			{
-				  std::size_t end =std::min(i+maxPhoton,sphotons.size());
+				std::size_t end =std::min(i+maxPhoton,sphotons.size());
        			std::vector<sphoton> batch(
 	   			std::make_move_iterator(sphotons.begin() + i),
 	   			std::make_move_iterator(sphotons.begin() + end));
@@ -64,7 +67,7 @@ namespace laropticks
 			}
 		}else
 		{
-			std::cout << "Simulating Photons at Once ...." << std::endl;
+			std::cout << "[GPUPrimaryPhoton::Batcher] Simulating Photons at Once ...." << std::endl;
 			setPhotons(sphotons);
        		Simulate();
 		}

@@ -10,7 +10,7 @@ namespace laropticks{
 
 // Initialize Opticks and Its Libraries
   void OpticksInterface::init(){
-
+	  if(World) return; // return if world exist since no need to re-initilize
   	  // Initialize Opticks Logs for Information and Debugging
 	  std::cout << "--- Initiation OpticksInterface ----" << std::endl;
 	  mf::LogTrace("OpticksInterface::init") << "Initializing OpticksInterface";

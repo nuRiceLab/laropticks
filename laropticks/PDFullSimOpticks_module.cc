@@ -87,7 +87,6 @@ namespace laropticks {
   private:
 	const art::InputTag fSimTag;
     OpticksInterface* opticks;
-	G4VPhysicalVolume* World;
   };
 
   //--------------------Construct PDFullSimOpticks-----------------------------//
@@ -105,9 +104,6 @@ namespace laropticks {
 
     // Initialize Opticks
     opticks=OpticksInterface::GetInstance();
-	// Initialize the world volume
-	World=nullptr;
-	opticks->setWorld(World);
   }
 
 
@@ -122,7 +118,7 @@ namespace laropticks {
 	UPVecBTR result;
 
 	// Initialize some variables
-	if(!World) opticks->init(); // once
+	opticks->init(); // once
     opticks->setParticleList(mcHandle); // per event
 	opticks->setEventID(event.event()); // per event
   	mf::LogError("PDFullSimOpticks") << "PDFullSimOpticks Module getByLabel: " << fSimTag;

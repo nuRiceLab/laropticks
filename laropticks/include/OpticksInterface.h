@@ -141,7 +141,7 @@ class OpticksHitHandler;
 	  std::vector<G4Track*> ftracks;
 	  std::vector<G4TouchableHistory*> fTouchableHistories;
 	  std::vector<G4DynamicParticle*> fDynamicParticles;
-	  G4VPhysicalVolume* World;
+	  G4VPhysicalVolume* World =nullptr;
 	  int trackID;
 	  int eventID;
 	  geo::GeometryCore const* fGeom;

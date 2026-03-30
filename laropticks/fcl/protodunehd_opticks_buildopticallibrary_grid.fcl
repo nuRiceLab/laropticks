@@ -19,7 +19,7 @@
 #include "services_dunefd_horizdrift.fcl"
 # services
 #include "services_refactored_pdune.fcl"
-//dunesim/dunesim/Simulation/larg4services_dune.fcl
+
 # modules
 #include "opticaldetectormodules.fcl"
 #include "opticaldetectorservices.fcl"
@@ -33,8 +33,6 @@ services:
 {
   #@table::protodune_larg4_services
   @table::dunefd_simulation_services
-  LArG4Detector: @local::dune10kt_1x2x6_larg4detector
-
   @table::dunefd_photolibbuild_services 
   # events are generated anew each time: default per-event policy is ineffective
   #NuRandomService:    @local::random_NuRandomService
@@ -43,18 +41,19 @@ services:
   OpDetResponse:      @local::standard_opdetresponse
   
   SpaceChargeService: @erase
-
+AuxDetGeometry: @local::protodunehdv1_auxdet_geo
+  Geometry:		@local::protodunehdv1_geo
   
 }
 
 
 #Use the following lines if you need to change the geometry by hand (e.g. test geometry)
-services.Geometry.GDML: "dune10kt_v6_refactored_1x2x6.gdml"
-services.AuxDetGeometry.GDML: "dune10kt_v6_refactored_1x2x6.gdml"
+services.Geometry.GDML: "dune10kt_v6_refactored.gdml"
+services.AuxDetGeometry.GDML: "dune10kt_v6_refactored.gdml"
 
 #services.OpDetResponseInterface.LongAxis: z
 
-services.TFileService.fileName: "Photonlibrary_test.root"
+services.TFileService.fileName: "Photonlibrary_opticks_test.root"
 
 services.Geometry.DisableWiresInG4: false # we need to account for wire shadow
 
@@ -128,8 +127,8 @@ physics:
    generator: @local::standard_lightsource	  
    largeant:  @local::standard_largeant
    opticks:  {
-       module_type : PDFullSimOpticks
-       SimulationLabel: "LightSource"
+          module_type : PDFullSimOpticks
+          SimulationLabel: "LightSource"
    }
  }
 

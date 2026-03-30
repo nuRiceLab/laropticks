@@ -13,7 +13,7 @@
 #include <curand_kernel.h>
 // Opticks
 #include "sphoton.h"
-
+#include "OpticksPhoton.h"
 // LArSoft
 #include "nusimdata/SimulationBase/MCParticle.h"
 
