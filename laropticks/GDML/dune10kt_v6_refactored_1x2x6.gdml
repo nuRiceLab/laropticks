@@ -281,6 +281,10 @@
    <property name="FASTTIMECONSTANT" ref="FTC" />
    <property name="SLOWTIMECONSTANT" ref="STC" />
    <property name="YIELDRATIO" ref="YR" />
+   <property name="SCINTILLATIONTIMECONSTANT1" ref="FTC"/>
+   <property name="SCINTILLATIONTIMECONSTANT2" ref="STC"/>
+   <property name="SCINTILLATIONCOMPONENT1" ref="SCINTLAR"/>
+   <property name="SCINTILLATIONCOMPONENT2" ref="SCINTLAR"/>
    <property name="SCINTILLATIONYIELD1" ref="YR"/>
    <property name="SCINTILLATIONYIELD2" ref="YR2"/>
 </material>
