@@ -32,7 +32,7 @@ namespace laropticks{
           OpticksHit ohit= OpticksHit();
           ohit.hit_id=hit.iindex();
           ohit.parent_id=hit.get_PId();
-          ohit.sensor_id=hit.get_identity();
+          ohit.sensor_id=hit.get_identity()-1;
           ohit.x=hit.pos.x;
           ohit.y=hit.pos.y;
           ohit.z=hit.pos.z;
@@ -68,12 +68,13 @@ namespace laropticks{
           analysisManager->FillNtupleIColumn(0,0,feventID);
           analysisManager->FillNtupleIColumn(0,1,it.parent_id);
           analysisManager->FillNtupleIColumn(0,2,it.hit_id);
-          analysisManager->FillNtupleIColumn(0,3,it.sensor_id);
+          analysisManager->FillNtupleIColumn(0,3,it.sensor_id); // convert it back to what CPU understand
           analysisManager->FillNtupleDColumn(0,4,it.x);
           analysisManager->FillNtupleDColumn(0,5,it.y);
           analysisManager->FillNtupleDColumn(0,6,it.z);
           analysisManager->FillNtupleDColumn(0,7,it.time);
           analysisManager->FillNtupleDColumn(0,8,it.wavelength);
+          analysisManager->FillNtupleIColumn(0,9,it.boundary);
           analysisManager->AddNtupleRow(0);
       }
 

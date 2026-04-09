@@ -18,7 +18,8 @@ namespace laropticks
                   spht.wavelength=(1240)/(1E9*pht.E()); // nm
 				  //std::cout << "Wavelength " << spht.wavelength << " pht.E() " << pht.E() << std::endl;
                   spht.time=pht.T();
-           		  spht.ParentId=-1;
+           		  spht.ParentId=0;
+
                   photons.push_back(spht);
 
             }

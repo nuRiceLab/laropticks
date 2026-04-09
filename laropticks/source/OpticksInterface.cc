@@ -428,6 +428,7 @@ namespace laropticks{
   		analysisManager->CreateNtupleDColumn("z");
   		analysisManager->CreateNtupleDColumn("t");
   		analysisManager->CreateNtupleDColumn("wavelength");
+  		analysisManager->CreateNtupleIColumn("boundary");
   		analysisManager->FinishNtuple();
 	}
 
