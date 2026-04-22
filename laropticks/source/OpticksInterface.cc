@@ -186,8 +186,9 @@ namespace laropticks{
 			DetectorIds.insert(std::pair<G4String,G4int>(detName,sid)); // map detector ids to detector names
 
 			// Generate Skin or Border Surface
-			//createG4SkinSurface(volName,ArapucaSurface);
-			createG4BorderSurface(physv1,detName,ArapucaSurface);
+			createG4SkinSurface(volName,ArapucaSurface);
+			//std::cout << "CryoName " << physv1->GetName() << " DetName " << detName << std::endl;
+			//createG4BorderSurface(physv1,detName,ArapucaSurface);
 		}
 
 	}
@@ -220,11 +221,11 @@ namespace laropticks{
   				// Assign  Skin or Border Surfaces
   				if (type=="Surface"){
   					// Generate Skin or Border Surface
-  					//createG4SkinSurface(volName,surface);
+  					createG4SkinSurface(volName,ArapucaSurface);
 					if(physv1==nullptr) physv1=phyStore->GetVolume(value+"_PV");
 
   					detName=volName+"_PV";
-  					createG4BorderSurface(physv1,detName,ArapucaSurface);
+  					//createG4BorderSurface(physv1,detName,ArapucaSurface);
   					count++;
   				}
 
@@ -277,11 +278,11 @@ namespace laropticks{
   		std::cout << "Number of Primary Photons " << fParticleList->size() << std::endl;
 
         auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
-        double vx,vy,vz,px,py,pz,mx,my,mz, wavelength;
+        //double vx,vy,vz,px,py,pz,mx,my,mz, wavelength;
 
         PhotonGen->setEventID(eventID);
         PhotonGen->setObtrHelpers(obtrHelpers);
-        PhotonGen->CollectPhotonInfo(fParticleList);
+        PhotonGen->CollectPhotonInfo(fParticleList,fph_save);
 		PhotonGen->Batcher();
         if(obtrHelpers.size()>0){
 		for (auto& opbtr: obtrHelpers)
@@ -423,16 +424,35 @@ namespace laropticks{
   		analysisManager->CreateNtupleIColumn("parent_Id");
   		analysisManager->CreateNtupleIColumn("hit_Id");
   		analysisManager->CreateNtupleIColumn("SensorID");
-  		analysisManager->CreateNtupleDColumn("x");
-  		analysisManager->CreateNtupleDColumn("y");
-  		analysisManager->CreateNtupleDColumn("z");
-  		analysisManager->CreateNtupleDColumn("t");
-  		analysisManager->CreateNtupleDColumn("wavelength");
+  		analysisManager->CreateNtupleFColumn("x");
+  		analysisManager->CreateNtupleFColumn("y");
+  		analysisManager->CreateNtupleFColumn("z");
+  		analysisManager->CreateNtupleFColumn("t");
+  		analysisManager->CreateNtupleFColumn("wavelength");
   		analysisManager->CreateNtupleIColumn("boundary");
   		analysisManager->FinishNtuple();
-	}
 
 
+		//Initial Particle Info
+		if(IsSavePhotons() && GetSimTag()=="LightSource"){
+  			analysisManager->CreateNtuple("photon_gen","Photon Generator Info");
+  			analysisManager->CreateNtupleIColumn("evtID");
+  			analysisManager->CreateNtupleDColumn("x");
+  			analysisManager->CreateNtupleDColumn("y");
+  			analysisManager->CreateNtupleDColumn("z");
+  			analysisManager->CreateNtupleDColumn("t");
+			analysisManager->CreateNtupleDColumn("px");
+  			analysisManager->CreateNtupleDColumn("py");
+  			analysisManager->CreateNtupleDColumn("pz");
+ 			analysisManager->CreateNtupleDColumn("mx");
+  			analysisManager->CreateNtupleDColumn("my");
+  			analysisManager->CreateNtupleDColumn("mz");
+  			analysisManager->CreateNtupleDColumn("wavelength");
+  			analysisManager->CreateNtupleDColumn("energy");
+  			analysisManager->FinishNtuple();
+		}else setSavePhotons(false);
+
+}
 	void OpticksInterface::initTracks(){
 		std::cout << "OpticksInterface::initTracks" << std::endl;
 		std::cout << "Setting up Tracks" << std::endl;
@@ -496,5 +516,17 @@ namespace laropticks{
 	void OpticksInterface::setWorld(G4VPhysicalVolume * fWorld) {
 		World = fWorld;
 	}
+	void OpticksInterface::setSimTag(std::string tag) {
+		ftag = tag;
+	}
+	void OpticksInterface::setSavePhotons(bool ph_save) {
+		fph_save = ph_save;
+	}
+	std::string OpticksInterface::GetSimTag() {
+		return ftag;
+	}
 
+	bool OpticksInterface::IsSavePhotons() {
+		return fph_save;
+	}
 }

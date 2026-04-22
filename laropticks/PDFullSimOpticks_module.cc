@@ -104,6 +104,10 @@ namespace laropticks {
 
     // Initialize Opticks
     opticks=OpticksInterface::GetInstance();
+
+	// Set Opticks Parameters
+	opticks->setSimTag(fSimTag.label());
+	opticks->setSavePhotons(true); // Saving photons produced during voxelization to an external file for testing.
   }
 
 

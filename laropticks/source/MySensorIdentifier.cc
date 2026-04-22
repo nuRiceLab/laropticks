@@ -4,7 +4,6 @@
 
 
 namespace laropticks {
-
   MySensorIdentifier::MySensorIdentifier(std::map<G4String, G4int> &ids) : fDetectIds(ids)
   {
 
@@ -31,7 +30,6 @@ namespace laropticks {
   }
 
   int MySensorIdentifier::getGlobalIdentity(const G4VPhysicalVolume *pv, const G4VPhysicalVolume *ppv) {
-
 
       if(fDetectIds.size()!=0){
           auto it =fDetectIds.find(pv->GetName());

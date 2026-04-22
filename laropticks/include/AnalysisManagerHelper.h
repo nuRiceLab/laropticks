@@ -6,7 +6,9 @@
 #include "G4Threading.hh"
 #include "G4AutoLock.hh"
 #include "G4ThreeVector.hh"
+#include "G4LorentzVector.hh"
 #include "g4root.hh"
+#include "sphoton.h"
 
 #ifndef GDMLOPTICKS_ANALYSISMANAGERHELPER_HH
 #define GDMLOPTICKS_ANALYSISMANAGERHELPER_HH
@@ -39,7 +41,8 @@ class AnalysisManagerHelper
         void SavePhotonInfotoFile();
         void SaveG4HitsToFile();
         void SetDetectIds(std::map<G4String,G4int> * fIDs);
-
+        void SaveVoxelPhotonInfotoFile(int &evtid, sphoton &sp, float &energy);
+        void SaveVoxelPhotonInfotoFile(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy);
         void Reset();
 
 

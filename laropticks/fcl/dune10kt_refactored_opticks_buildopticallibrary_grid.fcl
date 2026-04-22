@@ -101,9 +101,9 @@ services.PhotonVisibilityService: {
   
   UseCryoBoundary:  true
   
-  NX:  100  # 100 voxels along X direction
-  NY:  100  # 100 voxels along Y direction
-  NZ:  100  # 100 voxels along Z direction
+  NX:  15  # 100 voxels along X direction
+  NY:  15  # 100 voxels along Y direction
+  NZ:  15  # 100 voxels along Z direction
 
 } # services.PhotonVisibilityService
 
@@ -187,7 +187,7 @@ physics.analyzers.pmtresponse.MakeOpDetsTree: false
 physics.analyzers.pmtresponse.MakeOpDetEventsTree: false
 
 #How many photons to generate per voxel
-physics.producers.generator.N: 100000
+physics.producers.generator.N: 1000
 
 # To disable wireplane absorption, uncomment this line
 #services.LArG4Parameters.OpticalParamModels: ["TransparentPlaneAction"]

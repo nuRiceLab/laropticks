@@ -20,8 +20,10 @@
 //laropticks
 #include "laropticks/include/MySensorIdentifier.h"
 #include "laropticks/include/OpticksHitHandler.h"
+#include "laropticks/include/AnalysisManagerHelper.h"
 
-
+// G4
+#include "G4SystemOfUnits.hh"
 namespace laropticks {
 
     class GPUPrimaryPhoton
@@ -40,7 +42,7 @@ namespace laropticks {
             std::vector<sphoton> GetSPhotons();
             void setPhotons(std::vector<sphoton> sphotons);
             void Batcher();
-            void CollectPhotonInfo(std::vector<simb::MCParticle> const* phtlist);
+            void CollectPhotonInfo(std::vector<simb::MCParticle> const* phtlist, bool &fsave_pht);
             void Simulate();
 
             void setObtrHelpers(std::map<int, sim::OBTRHelper> &obtrHs);

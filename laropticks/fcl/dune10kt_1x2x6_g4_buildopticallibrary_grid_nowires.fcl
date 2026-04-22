@@ -44,19 +44,19 @@ services:
 
 
 #Use the following lines if you need to change the geometry by hand (e.g. test geometry)
-services.Geometry.GDML: "dune10kt_v6_refactored_1x2x6.gdml"
+services.Geometry.GDML: "dune10kt_v6_refactored_1x2x6_test.gdml"
 services.Geometry.SortingParameters.DetectorVersion: "dune10kt_v6"
 services.AuxDetGeometry.GDML: @local::services.Geometry.GDML
 #services.OpDetResponseInterface.LongAxis: z
 
-services.TFileService.fileName: "Photonlibrary_dune10kt_1x2x6.root"
+services.TFileService.fileName: "Photonlibrary_dune10kt_1x2x6_opticks.root"
 
 services.Geometry.DisableWiresInG4: false # we need to account for wire shadow
 
 services.LArG4Parameters: { # customization
-
+  
   @table::services.LArG4Parameters
-
+  
   # enable this custom LArG4 physics list
   # with optical physics instead of fast scintillation
   UseCustomPhysics: true
@@ -71,15 +71,15 @@ services.LArG4Parameters: { # customization
     "Stopping",
     "NeutronTrackingCut"
     ]
-
+  
   # store only the count of photons per channel, not the single photons
-  UseLitePhotons: true
-
+  UseLitePhotons: true 
+  
   # avoid unnecessary steps
   DisableWireplanes: true
   FillSimEnergyDeposits: false
   NoElectronPropagation: false
-
+  
 } # services.LArG4Parameters
 
 services.LArG4Detector.gdmlFileName_ : @local::services.Geometry.GDML
@@ -89,7 +89,7 @@ services.PhotonVisibilityService: {
   DoNotLoadLibrary: true
   UseAutomaticVoxels: true
   UseCryoBoundary:  true
-
+  
   NX:  15  # 100 voxels along X direction
   NY:  15  # 100 voxels along Y direction
   NZ:  15 # 100 voxels along Z direction
@@ -121,8 +121,9 @@ physics:
 
  producers:
  {
-   generator: @local::standard_lightsource
+   generator: @local::standard_lightsource	  
    largeant:  @local::standard_largeant
+
  }
 
  analyzers:
@@ -130,20 +131,20 @@ physics:
    pmtresponse: @local::dunefd_simphotoncounter    # defined in opticaldetectormodules.fcl
  }
 
- #define the producer and filter modules for this path, order matters,
+ #define the producer and filter modules for this path, order matters, 
  #filters reject all following items.  see lines starting physics.producers below
  simulate: [ generator, largeant ]
  analyzeIt:  [ pmtresponse ]
  #define the output stream, there could be more than one if using filters  stream1:  [ ]
  stream1:  [ ]
 
- #trigger_paths is a keyword and contains the paths that modify the art::event,
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
  #ie filters and producers
- trigger_paths: [simulate]
+ trigger_paths: [simulate] 
 
- #end_paths is a keyword and contains the paths that do not modify the art::Event,
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
  #ie analyzers and output streams.  these all run simultaneously
- end_paths:     [analyzeIt, stream1]
+ end_paths:     [analyzeIt, stream1]  
 }
 
 #block to define where the output goes.  if you defined a filter in the physics
@@ -172,7 +173,8 @@ physics.analyzers.pmtresponse.MakeOpDetsTree: true
 physics.analyzers.pmtresponse.MakeOpDetEventsTree: true
 
 #How many photons to generate per voxel
-physics.producers.generator.N: 1000
+physics.producers.generator.N: 100
+
 physics.producers.generator.RegionMin: [-360, -600, 0]
 physics.producers.generator.RegionMax: [ 360,  600, 1390]
 physics.producers.generator.UseCustomRegion: true

@@ -62,12 +62,53 @@ namespace laropticks {
     {
         G4AnalysisManager * AnaMngr = G4AnalysisManager::Instance();
         G4int eventID=0;
-        AnaMngr->FillNtupleIColumn(3,0,G4ScintPhotons);
-        AnaMngr->FillNtupleIColumn(3,1,G4CerenkovPhotons);
-        AnaMngr->FillNtupleIColumn(3,2,OpticksScintPhotons);
-        AnaMngr->FillNtupleIColumn(3,3,OpticksCerenkovPhotons);
-        AnaMngr->FillNtupleDColumn(3,4,Duration);
-        AnaMngr->FillNtupleIColumn(3,5,eventID);
+        AnaMngr->FillNtupleIColumn(2,0,G4ScintPhotons);
+        AnaMngr->FillNtupleIColumn(2,1,G4CerenkovPhotons);
+        AnaMngr->FillNtupleIColumn(2,2,OpticksScintPhotons);
+        AnaMngr->FillNtupleIColumn(2,3,OpticksCerenkovPhotons);
+        AnaMngr->FillNtupleDColumn(2,4,Duration);
+        AnaMngr->FillNtupleIColumn(2,5,eventID);
         AnaMngr->AddNtupleRow(3);
+    }
+
+    void AnalysisManagerHelper::SaveVoxelPhotonInfotoFile(int &evtid, sphoton &sp, float &energy)
+    {
+        G4AnalysisManager * AnaMngr = G4AnalysisManager::Instance();
+        int id=1;
+        // Float precision for Opticks
+        AnaMngr->FillNtupleIColumn(id,0,evtid);
+        AnaMngr->FillNtupleFColumn(id,1,sp.pos.x);
+        AnaMngr->FillNtupleFColumn(id,2,sp.pos.y);
+        AnaMngr->FillNtupleFColumn(id,3,sp.pos.z);
+        AnaMngr->FillNtupleFColumn(id,4,sp.time);
+        AnaMngr->FillNtupleFColumn(id,5,sp.pol.x);
+        AnaMngr->FillNtupleFColumn(id,6,sp.pol.y);
+        AnaMngr->FillNtupleFColumn(id,7,sp.pol.z);
+        AnaMngr->FillNtupleFColumn(id,8,sp.mom.x);
+        AnaMngr->FillNtupleFColumn(id,9,sp.mom.y);
+        AnaMngr->FillNtupleFColumn(id,10,sp.mom.z);
+        AnaMngr->FillNtupleFColumn(id,11,sp.wavelength);
+        AnaMngr->FillNtupleFColumn(id,12,energy);
+        AnaMngr->AddNtupleRow(id);
+    }
+    void AnalysisManagerHelper::SaveVoxelPhotonInfotoFile(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy)
+    {
+        G4AnalysisManager * AnaMngr = G4AnalysisManager::Instance();
+        int id=1;
+
+        AnaMngr->FillNtupleIColumn(id,0,evtid);
+        AnaMngr->FillNtupleDColumn(id,1,pos.x());
+        AnaMngr->FillNtupleDColumn(id,2,pos.y());
+        AnaMngr->FillNtupleDColumn(id,3,pos.z());
+        AnaMngr->FillNtupleDColumn(id,4,pos.t());
+        AnaMngr->FillNtupleDColumn(id,5,pol.x());
+        AnaMngr->FillNtupleDColumn(id,6,pol.y());
+        AnaMngr->FillNtupleDColumn(id,7,pol.z());
+        AnaMngr->FillNtupleDColumn(id,8,mom.x());
+        AnaMngr->FillNtupleDColumn(id,9,mom.y());
+        AnaMngr->FillNtupleDColumn(id,10,mom.z());
+        AnaMngr->FillNtupleDColumn(id,11,wavelength);
+        AnaMngr->FillNtupleDColumn(id,12,energy);
+        AnaMngr->AddNtupleRow(id);
     }
 }

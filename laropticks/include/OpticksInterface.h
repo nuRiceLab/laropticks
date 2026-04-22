@@ -116,6 +116,10 @@ class OpticksHitHandler;
 	  void setEventID(int evt);
 	  void setWorld(G4VPhysicalVolume* fWorld);
 	  void setParticleList(std::vector<simb::MCParticle> const* plist);
+ 	  void setSimTag(std::string tag);
+ 	  void setSavePhotons(bool ph_save);
+	  std::string GetSimTag();
+ 	  bool IsSavePhotons();
 	  //simb::MCParticle * FindParticle(int TrackID);
 	  // Finalize execution
 	  void endJob();
@@ -151,6 +155,8 @@ class OpticksHitHandler;
 	  G4LogicalVolumeStore* lvStore;
       static OpticksInterface* instance;
 	  GPUPrimaryPhoton * PhotonGen;
+	  std::string ftag;
+	  bool fph_save;
   };
 
 }
