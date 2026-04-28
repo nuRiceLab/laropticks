@@ -73,6 +73,7 @@ namespace laropticks {
 
     void AnalysisManagerHelper::SaveVoxelPhotonInfotoFile(int &evtid, sphoton &sp, float &energy)
     {
+
         G4AnalysisManager * AnaMngr = G4AnalysisManager::Instance();
         int id=1;
         // Float precision for Opticks
@@ -91,24 +92,77 @@ namespace laropticks {
         AnaMngr->FillNtupleFColumn(id,12,energy);
         AnaMngr->AddNtupleRow(id);
     }
-    void AnalysisManagerHelper::SaveVoxelPhotonInfotoFile(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy)
+    void AnalysisManagerHelper::FillPhotonGenTree(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy)
     {
-        G4AnalysisManager * AnaMngr = G4AnalysisManager::Instance();
-        int id=1;
 
-        AnaMngr->FillNtupleIColumn(id,0,evtid);
-        AnaMngr->FillNtupleDColumn(id,1,pos.x());
-        AnaMngr->FillNtupleDColumn(id,2,pos.y());
-        AnaMngr->FillNtupleDColumn(id,3,pos.z());
-        AnaMngr->FillNtupleDColumn(id,4,pos.t());
-        AnaMngr->FillNtupleDColumn(id,5,pol.x());
-        AnaMngr->FillNtupleDColumn(id,6,pol.y());
-        AnaMngr->FillNtupleDColumn(id,7,pol.z());
-        AnaMngr->FillNtupleDColumn(id,8,mom.x());
-        AnaMngr->FillNtupleDColumn(id,9,mom.y());
-        AnaMngr->FillNtupleDColumn(id,10,mom.z());
-        AnaMngr->FillNtupleDColumn(id,11,wavelength);
-        AnaMngr->FillNtupleDColumn(id,12,energy);
-        AnaMngr->AddNtupleRow(id);
+         fPhotonGenBranch.evtID=evtid;
+         fPhotonGenBranch.x=pos.x();
+         fPhotonGenBranch.y=pos.y();
+         fPhotonGenBranch.z=pos.z();
+         fPhotonGenBranch.t=pos.t();
+         fPhotonGenBranch.px=pol.x();
+         fPhotonGenBranch.py=pol.y();
+         fPhotonGenBranch.pz=pol.z();
+         fPhotonGenBranch.mx=mom.x();
+         fPhotonGenBranch.my=mom.y();
+         fPhotonGenBranch.mz=mom.z();
+         fPhotonGenBranch.wavelength=wavelength;
+         fPhotonGenBranch.energy=energy;
+         fPhotonGenTTree->Fill();
     }
+    void AnalysisManagerHelper::FillHitTree(laropticks::OpticksHit &hit){
+        fOpticksHitBranch=hit;
+        fOpticksHitTTree->Fill();
+    }
+
+     void AnalysisManagerHelper::FillVoxelTree(laropticks::Visibility &vis){
+        fVisibilityBranch=vis;
+        fVisTTree->Fill();
+    }
+
+    void AnalysisManagerHelper::initVoxelTree(){
+
+        fVisTTree = fTFileService->make<TTree>("Visibilities", "Visibilities as a function of VoxelID and SensorID");
+		fVisTTree->Branch("Voxel", &fVisibilityBranch.id, "Voxel/I");
+		fVisTTree->Branch("OptDetID", &fVisibilityBranch.sensorid, "OptDetID/I");
+		fVisTTree->Branch("Visibility", &fVisibilityBranch.Visibility, "Visibility/D");
+
+    }
+    void AnalysisManagerHelper::initOpticksHitTree(){
+        fOpticksHitTTree = fTFileService->make<TTree>("OpticksHits", "Opticks GPU Photon Hits");
+        fOpticksHitTTree->Branch("evtID", &fOpticksHitBranch.evtID, "evtID/I");
+        fOpticksHitTTree->Branch("hit_id", &fOpticksHitBranch.hit_id, "hit_id/I");
+        fOpticksHitTTree->Branch("parent_id", &fOpticksHitBranch.parent_id, "parent_id/I");
+        fOpticksHitTTree->Branch("sensor_id", &fOpticksHitBranch.sensor_id, "sensor_id/I");
+		fOpticksHitTTree->Branch("x", &fOpticksHitBranch.x, "x/D");
+		fOpticksHitTTree->Branch("y", &fOpticksHitBranch.y, "y/D");
+		fOpticksHitTTree->Branch("z", &fOpticksHitBranch.z, "z/D");
+		fOpticksHitTTree->Branch("t", &fOpticksHitBranch.time, "t/D");
+	    fOpticksHitTTree->Branch("px", &fOpticksHitBranch.polx, "px/D");
+		fOpticksHitTTree->Branch("py", &fOpticksHitBranch.poly, "py/D");
+		fOpticksHitTTree->Branch("pz", &fOpticksHitBranch.polz, "pz/D");
+		fOpticksHitTTree->Branch("mx", &fOpticksHitBranch.momx, "mx/D");
+		fOpticksHitTTree->Branch("my", &fOpticksHitBranch.momy, "my/D");
+		fOpticksHitTTree->Branch("mz", &fOpticksHitBranch.momz, "mz/D");
+        fOpticksHitTTree->Branch("wavelength", &fOpticksHitBranch.wavelength, "wavelength/D");
+		fOpticksHitTTree->Branch("boundary", &fOpticksHitBranch.boundary, "boundary/D");
+
+    }
+    void AnalysisManagerHelper::initPhotonGenTree(){
+        fPhotonGenTTree = fTFileService->make<TTree>("photon_gen", "Photons produced during LightSource Modules");
+        fPhotonGenTTree->Branch("evtID", &fPhotonGenBranch.evtID, "evtID/I");
+		fPhotonGenTTree->Branch("x", &fPhotonGenBranch.x, "x/D");
+		fPhotonGenTTree->Branch("y", &fPhotonGenBranch.y, "y/D");
+		fPhotonGenTTree->Branch("z", &fPhotonGenBranch.z, "z/D");
+		fPhotonGenTTree->Branch("t", &fPhotonGenBranch.t, "t/D");
+	    fPhotonGenTTree->Branch("px", &fPhotonGenBranch.px, "px/D");
+		fPhotonGenTTree->Branch("py", &fPhotonGenBranch.py, "py/D");
+		fPhotonGenTTree->Branch("pz", &fPhotonGenBranch.pz, "pz/D");
+		fPhotonGenTTree->Branch("mx", &fPhotonGenBranch.mx, "mx/D");
+		fPhotonGenTTree->Branch("my", &fPhotonGenBranch.my, "my/D");
+		fPhotonGenTTree->Branch("mz", &fPhotonGenBranch.mz, "mz/D");
+		fPhotonGenTTree->Branch("wavelength", &fPhotonGenBranch.wavelength, "wavelength/D");
+		fPhotonGenTTree->Branch("energy", &fPhotonGenBranch.energy, "energy/D");
+    }
+
 }

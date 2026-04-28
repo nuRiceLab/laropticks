@@ -20,11 +20,9 @@ namespace laropticks
 				  mom=G4ThreeVector(pht.Momentum(0).X(),pht.Momentum(0).Y(),pht.Momentum(0).Z());
 				  pol=G4ThreeVector(pht.Polarization().X(),pht.Polarization().Y(),pht.Polarization().Z());
 				  momunit=mom.unit();
-                  //spht.pos=make_float3(pht.Vx(0),pht.Vy(0),pht.Vz(0));
-                  spht.pos=make_float3(pos.x()*10,pos.y()*10,pos.z()*10); //mm
-			  	  //TVector3 mom = pht.Momentum(0).Vect().Unit();
+
+                  spht.pos=make_float3(pos.x()*10,pos.y()*10,pos.z()*10); //cm --> mm
                   spht.mom=make_float3(momunit.x(),momunit.y(),momunit.z());
-                  //spht.pol=make_float3(pht.Polarization()[0],pht.Polarization()[1],pht.Polarization()[2]);
                   spht.pol=make_float3(pol.x(),pol.y(),pol.z());
                   energy=1e9*pht.E(); // eV
             	  wavelength=1240/energy;
@@ -37,8 +35,7 @@ namespace laropticks
            		  spht.ParentId=0;
 				  if(fsave_pht){
 				  		AnalysisManagerHelper * AnaMngr = AnalysisManagerHelper::getInstance();
-						//AnaMngr->SaveVoxelPhotonInfotoFile(eventID,spht,energy);
-						AnaMngr->SaveVoxelPhotonInfotoFile(eventID,pos,momunit,pol ,wavelength,energy);
+						AnaMngr->FillPhotonGenTree(eventID,pos,momunit,pol ,wavelength,energy);
 				  }
 
                   photons.push_back(spht);
@@ -76,7 +73,7 @@ namespace laropticks
        	if(CollectedPhotons>=maxPhoton)
 		{
        		std::cout << "[GPUPrimaryPhoton::Batcher] Simulating in Batch Mode ...." << std::endl;
-       		//Simulate();
+
        		for (std::size_t i =0 ; i < CollectedPhotons; i+=maxPhoton)
 			{
 				std::size_t end =std::min(i+maxPhoton,sphotons.size());
@@ -107,7 +104,13 @@ namespace laropticks
 		g4xc->simulate(eventID,0);
        	cudaDeviceSynchronize();
 
-		if(SEvt::GetNumHit(0)>0) OpticksHits->CollectHits(eventID,obtrHelpers);
+
+		if(SEvt::GetNumHit(0)>0){
+			OpticksHits->setVoxelID(fVoxelID);
+			OpticksHits->AddPhotons(GetSPhotons().size()); // Get Photon Count;
+			OpticksHits->CollectHits(eventID,obtrHelpers);
+
+		}
        	else std::cout << "[GPUPrimaryPhoton::Simulate]: No Hits" << std::endl;
 
 		//Event id needed here

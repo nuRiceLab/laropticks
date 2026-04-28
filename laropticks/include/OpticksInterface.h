@@ -11,7 +11,8 @@
 #ifndef OPTICKSINTERFACE_H
 #define OPTICKSINTERFACE_H
 
-
+// Art
+#include "art_root_io/TFileService.h"
 
 // laropticks headers
 #include "laropticks/include/MySensorIdentifier.h"
@@ -69,6 +70,8 @@
 #include "G4StepPoint.hh"
 #include "G4TouchableHistory.hh"
 #include "G4PhysicalVolumeStore.hh"
+
+
 // Xercesc
 #include "xercesc/util/PlatformUtils.hpp"
 #include "xercesc/parsers/XercesDOMParser.hpp"
@@ -93,9 +96,6 @@ class OpticksHitHandler;
     	 return instance;
       }
 
-
-
-
       void init();
       void initPhotonDetectors();
       void initFileManager();
@@ -106,7 +106,7 @@ class OpticksHitHandler;
 	  void createG4BorderSurface(G4VPhysicalVolume *phyv1, std::string v2, G4OpticalSurface* surface);
 	  std::string GetVolumeName(const std::string& s);
       UPVecBTR executeEvent(VecSED const& edeps); // Simulating photons produced by scintilation events
-      UPVecBTR executeEvent(); // This is for producing visibilities with primary photons
+      UPVecBTR executeEvent( int VoxelID); // This is for producing visibilities with primary photons
 
 
 	  // Initialize fast simulation
@@ -118,8 +118,10 @@ class OpticksHitHandler;
 	  void setParticleList(std::vector<simb::MCParticle> const* plist);
  	  void setSimTag(std::string tag);
  	  void setSavePhotons(bool ph_save);
+      void setFileService(art::TFileService * fs);
 	  std::string GetSimTag();
  	  bool IsSavePhotons();
+
 	  //simb::MCParticle * FindParticle(int TrackID);
 	  // Finalize execution
 	  void endJob();
@@ -157,8 +159,11 @@ class OpticksHitHandler;
 	  GPUPrimaryPhoton * PhotonGen;
 	  std::string ftag;
 	  bool fph_save;
+      art::TFileService *fTFileService;
   };
-
+     inline void OpticksInterface::setFileService(art::TFileService * fs){
+      fTFileService=fs;
+  }
 }
 
 #endif //OPTICKSINTERFACE_H

@@ -1,5 +1,5 @@
 /**
- *  File: include/OpticksInterface.h
+ *  File: include/GPUPrimaryPhoton.h
  *  Author: Ilker Parmaksiz
  *  Experiment: DUNE
  *  Institution: Rice University
@@ -38,24 +38,31 @@ namespace laropticks {
             };
 
             void reset();
-            void setEventID(int id);
+            void setEventID(int &id);
             std::vector<sphoton> GetSPhotons();
             void setPhotons(std::vector<sphoton> sphotons);
             void Batcher();
             void CollectPhotonInfo(std::vector<simb::MCParticle> const* phtlist, bool &fsave_pht);
             void Simulate();
-
             void setObtrHelpers(std::map<int, sim::OBTRHelper> &obtrHs);
+			void setVoxelID(int &id);
+
         private:
             GPUPrimaryPhoton(){};
             static GPUPrimaryPhoton * instance;
             std::vector<sphoton> photons;
             int eventID;
             std::map<int, sim::OBTRHelper> obtrHelpers;
+			int fVoxelID;
+
     };
 
+    // Set Voxel ID for simulation
+    inline void GPUPrimaryPhoton::setVoxelID(int &id){
+        fVoxelID = id;
+    }
     // Set Event ID for simulation
-    inline void GPUPrimaryPhoton::setEventID(int id){
+    inline void GPUPrimaryPhoton::setEventID(int &id){
         eventID = id;
     }
     // Pass Backtracking info

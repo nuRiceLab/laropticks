@@ -5,7 +5,6 @@ namespace laropticks{
 
   // Opticks Hit Collection
   // Handles getting hits from opticks to a file
-  // Need to implement the backtracer for LArSoft in this class
   OpticksHitHandler * OpticksHitHandler::instance = nullptr;
 
   void OpticksHitHandler::CollectHits(int eventID,std::map<int, sim::OBTRHelper> obtrHelpers) {
@@ -16,20 +15,11 @@ namespace laropticks{
 	  // --- Get Hits ----
       SEvt* sev             = SEvt::Get_EGPU();
       sphoton::Get(sphotons, sev->getHit());
-      //auto run= G4RunManager::GetRunManager();
-      //G4int eventID=run->GetCurrentEvent()->GetEventID();
-	  //std::cout << "Generating OpDetBacktrackerRecord ...." << std::endl;
-	  ///std::map<int,sim::OpDetBacktrackerRecord> btmap;
 
-	  /*
-      fTouchableHistory = new G4TouchableHistory();
-      auto nav = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
-	  nav->LocateGlobalPointAndUpdateTouchable(G4ThreeVector(edep.MidPointX(),edep.MidPointY(),edep.MidPointZ()), fTouchableHistory);
-	  fTouchableHistory->GetVolume()->GetLogicalVolume()->GetName();
-	  */
 	  feventID=eventID;
       for (auto & hit : sphotons) {
           OpticksHit ohit= OpticksHit();
+          ohit.evtID=eventID;
           ohit.hit_id=hit.iindex();
           ohit.parent_id=hit.get_PId();
           ohit.sensor_id=hit.get_identity()-1;
@@ -48,9 +38,17 @@ namespace laropticks{
           hits.push_back(ohit);
 		  double pos[3]={ohit.x,ohit.y,ohit.z};
 		  obtrHelpers.at(ohit.sensor_id).AddScintillationPhotonsToMap(ohit.parent_id, ohit.time, 1,pos , ohit.wavelength);
+          // Increment Photon for Visibilities
+          if(fSensorCounts.size()>0) fSensorCounts.at(ohit.sensor_id)+=1;
+
+
+
       }
-	  //
+
+      if(fSensorCounts.size()>0) SaveVisibilities(); // Save Visibilities Before Hits
+
 	  SaveHits();
+
       // clear the hits
       sphotons.clear();
       sphotons.shrink_to_fit();
@@ -62,20 +60,10 @@ namespace laropticks{
 
   void OpticksHitHandler::SaveHits(){
 
-      G4AnalysisManager * analysisManager= G4AnalysisManager::Instance();
-      std::cout << "OpticksHitHandler::SaveHits" << std::endl;
+      AnalysisManagerHelper * anaHelper= AnalysisManagerHelper::getInstance();
+      std::cout << "[OpticksHitHandler::SaveHits] Saving GPU Hits ..." << std::endl;
       for (auto it : hits){
-          analysisManager->FillNtupleIColumn(0,0,feventID);
-          analysisManager->FillNtupleIColumn(0,1,it.parent_id);
-          analysisManager->FillNtupleIColumn(0,2,it.hit_id);
-          analysisManager->FillNtupleIColumn(0,3,it.sensor_id); // convert it back to what CPU understand
-          analysisManager->FillNtupleFColumn(0,4,it.x);
-          analysisManager->FillNtupleFColumn(0,5,it.y);
-          analysisManager->FillNtupleFColumn(0,6,it.z);
-          analysisManager->FillNtupleFColumn(0,7,it.time);
-          analysisManager->FillNtupleFColumn(0,8,it.wavelength);
-          analysisManager->FillNtupleIColumn(0,9,it.boundary);
-          analysisManager->AddNtupleRow(0);
+          anaHelper->FillHitTree(it);
       }
 
      // Handle Hits Here
@@ -85,5 +73,26 @@ namespace laropticks{
      //QSim::Get()->reset(feventID);
   }
 
+  void OpticksHitHandler::SaveVisibilities(){
 
+      AnalysisManagerHelper * anaHelper= AnalysisManagerHelper::getInstance();
+      std::cout << "[OpticksHitHandler::SaveVisibilities] Saving GPU Visibilities ..." << std::endl;
+
+      Visibility fvis;
+      for (auto &it : fSensorCounts)
+      {
+
+        //std::cout << "Sid " <<it.first << " Count " << it.second << " PhotonCount " << PhotonCount << " vis " <<vis <<std::endl;
+
+        fvis.id=fVoxelID;
+        fvis.sensorid=it.first;
+		double vis = (double (it.second) / double(PhotonCount));
+        fvis.Visibility= vis;
+        anaHelper->FillVoxelTree(fvis);
+        // Reseting for Next Event
+        it.second=0;
+      }
+       // Reset
+       PhotonCount=0;
+  }
 }

@@ -49,7 +49,7 @@ services.Geometry.SortingParameters.DetectorVersion: "dune10kt_v6"
 services.AuxDetGeometry.GDML: @local::services.Geometry.GDML
 #services.OpDetResponseInterface.LongAxis: z
 
-services.TFileService.fileName: "Photonlibrary_dune10kt_1x2x6_opticks.root"
+services.TFileService.fileName: "Photonlibrary_dune10kt_1x2x6_opticks_v6.root"
 
 services.Geometry.DisableWiresInG4: false # we need to account for wire shadow
 
@@ -90,9 +90,9 @@ services.PhotonVisibilityService: {
   UseAutomaticVoxels: true
   UseCryoBoundary:  true
   
-  NX:  15  # 100 voxels along X direction
-  NY:  15  # 100 voxels along Y direction
-  NZ:  15 # 100 voxels along Z direction
+  NX:  100  # 100 voxels along X direction
+  NY:  100  # 100 voxels along Y direction
+  NZ:  100  # 100 voxels along Z direction
 
 } # services.PhotonVisibilityService
 
@@ -108,7 +108,7 @@ services.LArPropertiesService.ScintPreScale: 1.0
 source:
 {
   module_type: EmptyEvent
-  maxEvents:   4913           # Number of events to create
+  maxEvents:   5000           # Number of events to create
   firstRun:    1           # Run number to use for this file
   firstEvent:  1           # number of first event in the file
 }
@@ -176,7 +176,7 @@ physics.analyzers.pmtresponse.MakeOpDetsTree: true
 physics.analyzers.pmtresponse.MakeOpDetEventsTree: true
 
 #How many photons to generate per voxel
-physics.producers.generator.N: 1000
+physics.producers.generator.N: 10000
 
 physics.producers.generator.RegionMin: [-360, -600, 0]
 physics.producers.generator.RegionMax: [ 360,  600, 1390]

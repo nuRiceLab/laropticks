@@ -27,21 +27,24 @@ namespace laropticks{
 	  // Assign Logical and Physical Store Instances
 	  lvStore = G4LogicalVolumeStore::GetInstance();
 	  phyStore = G4PhysicalVolumeStore::GetInstance();
+      // Get instances of tools that we need
+      OpticksHits = OpticksHitHandler::getInstance();
+	  PhotonGen= GPUPrimaryPhoton::getInstance();
 
       // Initialize
       initPhotonDetectors();
-	  if(DetectorIds.size()>0) OpticksSensorIdentifier = new MySensorIdentifier(DetectorIds);
+	  if(DetectorIds.size()>0) {
+        OpticksSensorIdentifier = new MySensorIdentifier(DetectorIds);
+
+        if(IsSavePhotons() && GetSimTag()=="LightSource") OpticksHits->initSensorCounts(DetectorIds);
+      }
 	  else throw cet::exception("DetectorIds") << "Missing DetectorIds";
 
-      OpticksHits = OpticksHitHandler::getInstance();
-	  PhotonGen= GPUPrimaryPhoton::getInstance();
+
 
       // Set Geometry
       G4CXOpticks::SetSensorIdentifier(OpticksSensorIdentifier);
       G4CXOpticks::SetGeometry(World);
-
-      // Initialize root file (For Testing Purposes)
-	  initFileManager();
 
   }
 
@@ -54,14 +57,14 @@ namespace laropticks{
 		 return;
 	 }
 
-	  G4ThreeVector startPoint=G4ThreeVector(edep.StartX(),edep.StartY(),edep.StartZ());
-	  G4ThreeVector endPoint=G4ThreeVector(edep.EndX(),edep.EndY(),edep.EndZ());
+	  G4ThreeVector startPoint=G4ThreeVector(edep.StartX()*cm,edep.StartY()*cm,edep.StartZ()*cm);
+	  G4ThreeVector endPoint=G4ThreeVector(edep.EndX()*cm,edep.EndY()*cm,edep.EndZ()*cm);
 
   	  auto touch = new G4TouchableHistory();
 	  fTouchableHistories.push_back(touch);
 
       auto nav = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
-	  nav->LocateGlobalPointAndUpdateTouchable(G4ThreeVector(edep.MidPointX(),edep.MidPointY(),edep.MidPointZ()), touch);
+	  nav->LocateGlobalPointAndUpdateTouchable(G4ThreeVector(edep.MidPointX()*cm,edep.MidPointY()*cm,edep.MidPointZ()*cm), touch);
 
 	  G4Material * mat= G4Material::GetMaterial(touch->GetVolume()->GetLogicalVolume()->GetMaterial()->GetName());
 
@@ -79,16 +82,16 @@ namespace laropticks{
 
 	  astep->SetPostStepPoint(postStep);
 	  astep->SetPreStepPoint(preStep);
-	  astep->SetStepLength(edep.StepLength());
+	  astep->SetStepLength(edep.StepLength()*cm);
 	  preStep->SetPosition(startPoint);
-	  preStep->SetGlobalTime(edep.StartT());
+	  preStep->SetGlobalTime(edep.StartT()*ns);
 	  preStep->SetMaterial(mat);
-	  preStep->SetVelocity(startPoint.mag()/edep.StartT());
+	  preStep->SetVelocity(startPoint.mag()/(edep.StartT()*ns));
 
   	  postStep->SetPosition(endPoint);
-  	  postStep->SetGlobalTime(edep.EndT());
+  	  postStep->SetGlobalTime(edep.EndT()*ns);
   	  postStep->SetMaterial(mat);
-	  postStep->SetVelocity(endPoint.mag()/edep.EndT());
+	  postStep->SetVelocity(endPoint.mag()/(edep.EndT()*ns));
 
       mf::LogTrace("OpticksInterface::CollectPhotons") << "Collecting Photons";
 
@@ -229,11 +232,9 @@ namespace laropticks{
   					count++;
   				}
 
-  				if (type=="PD" and value=="PhotonDetector")
+  				if ((type=="PD" || type=="SensDet") and value=="PhotonDetector")
   				{
   					//std::cout << "Attaching sensitive detector " << value << " to volume " << volName+"_PV" << std::endl ;
-
-
   					obtrHelpers.emplace(sid,sid);
   					DetectorIds.insert(std::pair<G4String,G4int>(volName+"_PV",sid++));
   				}
@@ -262,6 +263,8 @@ namespace laropticks{
  		//Getting the GDMLPATH incase we need it
   		fGeom = lar::providerFrom<geo::Geometry>();
 	    GDMLPath = fGeom->GDMLFile();
+        // Initialize root file (For Testing Purposes)
+	    initFileManager();
         OpticksSensorIdentifier=nullptr;
 		OpticksHits=nullptr;
 		DetectorIds={};
@@ -273,13 +276,13 @@ namespace laropticks{
 	/*!
 	* Simulate primary photons per art Event \c art::Event .
 	*/
-	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(){
+	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(int VoxelID){
 		std::cout << "OpticksInterface::executeEvent for primary photon production" << std::endl;
   		std::cout << "Number of Primary Photons " << fParticleList->size() << std::endl;
 
         auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
         //double vx,vy,vz,px,py,pz,mx,my,mz, wavelength;
-
+		PhotonGen->setVoxelID(VoxelID);
         PhotonGen->setEventID(eventID);
         PhotonGen->setObtrHelpers(obtrHelpers);
         PhotonGen->CollectPhotonInfo(fParticleList,fph_save);
@@ -393,12 +396,12 @@ namespace laropticks{
 
 		mf::LogTrace("OpticksInterface::endJob") << "Finalizing the job process for Opticks";
   		// Write and Close File
-  		auto analysisManager = G4AnalysisManager::Instance();
-  		if (analysisManager){
+  		auto analysisManager = AnalysisManagerHelper::getInstance();
+  		/*if (analysisManager){
   			std::cout << "Saving Events to " << analysisManager->GetFileName() <<" root file .." << std::endl;
   			analysisManager->Write();
   			analysisManager->CloseFile();
-  		}
+  		}*/
   	    XMLPlatformUtils::Terminate();
 
 		// Release memory
@@ -413,43 +416,21 @@ namespace laropticks{
 
 	void OpticksInterface::initFileManager() {
     	// Get the analysis manager
-     	G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
 
-  		if (analysisManager)
-  		  analysisManager->OpenFile("test.root");
+     	AnalysisManagerHelper* analysisManager = AnalysisManagerHelper::getInstance();
+	    analysisManager->setFileService(fTFileService);
+  		//if (analysisManager) analysisManager->createDir("Opticks");
 
-  		//Opticks Hits
-  		analysisManager->CreateNtuple("OpticksHits","Opticks Hits");
-  		analysisManager->CreateNtupleIColumn("evtID");
-  		analysisManager->CreateNtupleIColumn("parent_Id");
-  		analysisManager->CreateNtupleIColumn("hit_Id");
-  		analysisManager->CreateNtupleIColumn("SensorID");
-  		analysisManager->CreateNtupleFColumn("x");
-  		analysisManager->CreateNtupleFColumn("y");
-  		analysisManager->CreateNtupleFColumn("z");
-  		analysisManager->CreateNtupleFColumn("t");
-  		analysisManager->CreateNtupleFColumn("wavelength");
-  		analysisManager->CreateNtupleIColumn("boundary");
-  		analysisManager->FinishNtuple();
+	    //Opticks Hits
+        analysisManager->initOpticksHitTree();
 
 
 		//Initial Particle Info
 		if(IsSavePhotons() && GetSimTag()=="LightSource"){
-  			analysisManager->CreateNtuple("photon_gen","Photon Generator Info");
-  			analysisManager->CreateNtupleIColumn("evtID");
-  			analysisManager->CreateNtupleDColumn("x");
-  			analysisManager->CreateNtupleDColumn("y");
-  			analysisManager->CreateNtupleDColumn("z");
-  			analysisManager->CreateNtupleDColumn("t");
-			analysisManager->CreateNtupleDColumn("px");
-  			analysisManager->CreateNtupleDColumn("py");
-  			analysisManager->CreateNtupleDColumn("pz");
- 			analysisManager->CreateNtupleDColumn("mx");
-  			analysisManager->CreateNtupleDColumn("my");
-  			analysisManager->CreateNtupleDColumn("mz");
-  			analysisManager->CreateNtupleDColumn("wavelength");
-  			analysisManager->CreateNtupleDColumn("energy");
-  			analysisManager->FinishNtuple();
+            // Initialize Photon Info
+            analysisManager->initPhotonGenTree();
+            // Estimating Visibilities for comparison with LightSource Module
+            analysisManager->initVoxelTree();
 		}else setSavePhotons(false);
 
 }
@@ -463,8 +444,8 @@ namespace laropticks{
 			auto mp = fParticleList->at(ip);
 		    G4ParticleDefinition* pdef = G4ParticleTable::GetParticleTable()->FindParticle(mp.PdgCode());
 
-			G4DynamicParticle * DParticle= new G4DynamicParticle(pdef,G4ThreeVector(mp.Px(0),mp.Py(0),mp.Pz(0)),mp.E(0));
-			auto trk =new G4Track(DParticle,mp.T(),G4ThreeVector(mp.Vx(0),mp.Vy(0),mp.Vz(0)));
+			G4DynamicParticle * DParticle= new G4DynamicParticle(pdef,G4ThreeVector(mp.Px(0)*GeV,mp.Py(0)*GeV,mp.Pz(0)*GeV),mp.E(0)*GeV);
+			auto trk =new G4Track(DParticle,mp.T()*ns,G4ThreeVector(mp.Vx(0)*cm,mp.Vy(0)*cm,mp.Vz(0)*cm));
 			trackID=mp.TrackId();
 			trk->SetTrackID(trackID);
 			trk->SetParentID(mp.Mother());

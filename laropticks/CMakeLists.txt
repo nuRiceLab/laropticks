@@ -29,6 +29,10 @@ cet_build_plugin(PDFullSimOpticks art::EDProducer
         fhiclcpp::fhiclcpp
         CLHEP::Random
         nusimdata::SimulationBase
+        art_root_io::TFileService_service
+        art_root_io::tfile_support
+        ROOT::Core
+        ROOT::Tree
         cetlib_except::cetlib_except
 )
 

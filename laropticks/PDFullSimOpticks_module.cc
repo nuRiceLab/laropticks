@@ -30,6 +30,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art/Utilities/make_tool.h"
+#include "art_root_io/TFileService.h"
 #include "canvas/Utilities/Exception.h"
 #include "canvas/Utilities/InputTag.h"
 #include "cetlib_except/exception.h"
@@ -41,6 +42,7 @@
 #include "fhiclcpp/types/OptionalDelegatedParameter.h"
 #include "fhiclcpp/types/Sequence.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "larsim/PhotonPropagation/PhotonVisibilityService.h"
 
 // Random numbers
 #include "CLHEP/Random/RandPoissonQ.h"
@@ -87,6 +89,9 @@ namespace laropticks {
   private:
 	const art::InputTag fSimTag;
     OpticksInterface* opticks;
+	phot::PhotonVisibilityService const* fPhotonVisService = nullptr;
+	art::ServiceHandle<art::TFileService> fTFileService;
+
   };
 
   //--------------------Construct PDFullSimOpticks-----------------------------//
@@ -96,6 +101,8 @@ namespace laropticks {
   PDFullSimOpticks::PDFullSimOpticks(Parameters const& config) : art::EDProducer{config}
 											   ,fSimTag(config().SimulationLabel())
 											   ,opticks(nullptr)
+											   ,fPhotonVisService(art::ServiceHandle<phot::PhotonVisibilityService const>().get())
+
 {
     mf::LogInfo("PDFullSimOpticks") << "Initializing PDFullSimOpticks." << std::endl;
 
@@ -108,9 +115,9 @@ namespace laropticks {
 	// Set Opticks Parameters
 	opticks->setSimTag(fSimTag.label());
 	opticks->setSavePhotons(true); // Saving photons produced during voxelization to an external file for testing.
-  }
-
-
+  	//std::cout << "fTFileService = " << fTFileService.get() << std::endl;
+	opticks->setFileService(fTFileService.get());
+ }
   //......................................................................
   void PDFullSimOpticks::produce(art::Event& event)
   {
@@ -132,7 +139,14 @@ namespace laropticks {
 
 
 	// Produce Photons Directly to Generate Visibility Maps
-   if (fSimTag == "LightSource") result=opticks->executeEvent();
+   if (fSimTag == "LightSource")
+	{
+	    int VoxID;
+        double NProd;
+        fPhotonVisService->RetrieveLightProd(VoxID, NProd);
+		result=opticks->executeEvent(VoxID);
+
+    }
 
 	// Copy the results
 	if (result) event.put(std::move(result));

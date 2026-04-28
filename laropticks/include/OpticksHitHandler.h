@@ -24,7 +24,6 @@
 #include "G4TouchableHistory.hh"
 
 // Geant4
-#include "g4root.hh"
 #include "G4Threading.hh"
 #include "G4AutoLock.hh"
 #include "G4ThreeVector.hh"
@@ -33,6 +32,8 @@
 // Cetlib
 #include "cetlib_except/exception.h"
 
+// laropticks
+#include "laropticks/include/AnalysisManagerHelper.h"
 
 namespace laropticks {
 
@@ -47,17 +48,7 @@ namespace laropticks {
             return instance;
         };
 
-        struct OpticksHit{
-            int hit_id;
-            int parent_id;
-            int sensor_id;
-            double time;
-            double x,y,z;
-            double momx,momy,momz;
-            double polx,poly,polz;
-            double wavelength;
-            double boundary;
-        };
+
 
 
 
@@ -65,17 +56,39 @@ namespace laropticks {
 
         void AddHits();
         void SaveHits();
+        void SaveVisibilities();
 
+        void AddPhotons(int value);
+        void initSensorCounts(std::map<G4String, G4int>  &DetectorIds);
+		void setVoxelID(int &id);
     private:
         OpticksHitHandler(){};
         static OpticksHitHandler * instance;
         static G4Mutex mtx;
         std::vector<sphoton> sphotons;
-        std::vector<OpticksHit> hits;
+        std::vector<laropticks::OpticksHit> hits;
 		G4TouchableHistory *fTouchableHistory;
 		int feventID;
+        int PhotonCount=0;
+        std::map<int,int> fSensorCounts;
+		int fVoxelID=0;
   };
 
+  inline void OpticksHitHandler::AddPhotons(int value)
+  {
+      PhotonCount+=value;
+  }
+
+  inline void OpticksHitHandler::setVoxelID(int &id)
+  {
+      fVoxelID=id;
+  }
+
+   inline void OpticksHitHandler::initSensorCounts(std::map<G4String, G4int>  &DetectorIds)
+   {
+       for (auto &it : DetectorIds)
+            fSensorCounts.insert(std::pair<int,int>(it.second,0)); // Initialize
+   }
 }
 
 #endif //OPTICKS_OPTICKSHITHANDLER_HH
