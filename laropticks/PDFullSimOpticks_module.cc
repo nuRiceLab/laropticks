@@ -101,22 +101,23 @@ namespace laropticks {
   PDFullSimOpticks::PDFullSimOpticks(Parameters const& config) : art::EDProducer{config}
 											   ,fSimTag(config().SimulationLabel())
 											   ,opticks(nullptr)
-											   ,fPhotonVisService(art::ServiceHandle<phot::PhotonVisibilityService const>().get())
+
 
 {
     mf::LogInfo("PDFullSimOpticks") << "Initializing PDFullSimOpticks." << std::endl;
 
     // Initialize OpDetBacktrackerRecord
     produces<std::vector<sim::OpDetBacktrackerRecord>>();
-
+	std::cout << "PDFullSimOpticks constructed with SimulationLabel: " << fSimTag.label() << std::endl;
     // Initialize Opticks
     opticks=OpticksInterface::GetInstance();
 
 	// Set Opticks Parameters
 	opticks->setSimTag(fSimTag.label());
 	opticks->setSavePhotons(true); // Saving photons produced during voxelization to an external file for testing.
-  	//std::cout << "fTFileService = " << fTFileService.get() << std::endl;
+	// Saving results to a common root file
 	opticks->setFileService(fTFileService.get());
+  	if (fSimTag == "LightSource") fPhotonVisService = art::ServiceHandle<phot::PhotonVisibilityService const>().get();
  }
   //......................................................................
   void PDFullSimOpticks::produce(art::Event& event)
@@ -132,7 +133,6 @@ namespace laropticks {
 	opticks->init(); // once
     opticks->setParticleList(mcHandle); // per event
 	opticks->setEventID(event.event()); // per event
-  	mf::LogError("PDFullSimOpticks") << "PDFullSimOpticks Module getByLabel: " << fSimTag;
 
 	// For IonAndScint Photon Production
     if (event.getByLabel(fSimTag, edepHandle)) result=opticks->executeEvent(*(edepHandle.product())); // Include energy deposits here
@@ -150,7 +150,7 @@ namespace laropticks {
 
 	// Copy the results
 	if (result) event.put(std::move(result));
-	else std::cout<<"PDFullSimOpticks, BackTracker Results Empty!" << std::endl;
+	else mf::LogTrace("PDFullSimOpticks") <<"BackTracker Results Empty!" << std::endl;
   }
 
 } // namespace laropticks
@@ -158,6 +158,7 @@ namespace laropticks {
 //--------------------Begin Job----------------------------------------------//
 void laropticks::PDFullSimOpticks::beginJob()
 {
+
   mf::LogTrace("PDFullSimOpticks") << "beginJob" << std::endl;
   opticks->beginJob();
 }

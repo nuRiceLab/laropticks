@@ -16,7 +16,7 @@
 #include "OpticksPhoton.h"
 // LArSoft
 #include "nusimdata/SimulationBase/MCParticle.h"
-
+#include "messagefacility/MessageLogger/MessageLogger.h"
 //laropticks
 #include "laropticks/include/MySensorIdentifier.h"
 #include "laropticks/include/OpticksHitHandler.h"

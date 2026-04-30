@@ -28,6 +28,11 @@
 
 process_name: LibraryBuild
 
+services: {
+  MessageLogger: {
+    debugModules: ["*"]
+    }
+  }
 
 services:
 {
@@ -39,8 +44,10 @@ services:
   RandomNumberGenerator: {} #ART native random number generator
   OpDetResponse:      @local::standard_opdetresponse
   SpaceChargeService: @erase
-
+  TimeTracker:           {}
+  MemoryTracker:         {} # default is one
 }
+
 
 
 #Use the following lines if you need to change the geometry by hand (e.g. test geometry)
@@ -87,13 +94,19 @@ services.LArG4Detector.gdmlFileName_ : @local::services.Geometry.GDML
 services.PhotonVisibilityService: {
   LibraryBuildJob:  true
   DoNotLoadLibrary: true
-  UseAutomaticVoxels: true
-  UseCryoBoundary:  true
-  
-  NX:  100  # 100 voxels along X direction
-  NY:  100  # 100 voxels along Y direction
-  NZ:  100  # 100 voxels along Z direction
+  UseAutomaticVoxels: false
+  UseCryoBoundary:  false
+  ReflectOverZeroX: false
+  NX:  17  # 17 voxels along X direction
+  NY:  17  # 17 voxels along Y direction
+  NZ:  17  # 17 voxels along Z direction
 
+  XMin: -360
+  XMax: 360
+  YMin: -600
+  YMax: 600
+  ZMin: 0
+  ZMax: 1390
 } # services.PhotonVisibilityService
 
 # for photon library generation we do not include prescale
@@ -108,7 +121,7 @@ services.LArPropertiesService.ScintPreScale: 1.0
 source:
 {
   module_type: EmptyEvent
-  maxEvents:   5000           # Number of events to create
+  maxEvents:   4913           # Number of events to create
   firstRun:    1           # Run number to use for this file
   firstEvent:  1           # number of first event in the file
 }
@@ -175,11 +188,21 @@ physics.analyzers.pmtresponse.MakeDetectedPhotonsTree: true
 physics.analyzers.pmtresponse.MakeOpDetsTree: true
 physics.analyzers.pmtresponse.MakeOpDetEventsTree: true
 
-#How many photons to generate per voxel
-physics.producers.generator.N: 10000
+# Override the default number of photons to generate, and the region to generate them in, for the generator module.
+#The region is set to match the geometry of the photon visibility service, so that we only generate photons in the region that we are simulating for the library.
 
-physics.producers.generator.RegionMin: [-360, -600, 0]
-physics.producers.generator.RegionMax: [ 360,  600, 1390]
-physics.producers.generator.UseCustomRegion: true
+physics.producers.generator.N: 100000
+physics.producers.generator.NUseCustomRegion: true
+physics.producers.generator.NRegionMin: [ @local::services.PhotonVisibilityService.XMin, @local::services.PhotonVisibilityService.YMin, @local::services.PhotonVisibilityService.ZMin]
+physics.producers.generator.NRegionMax: [ @local::services.PhotonVisibilityService.XMax, @local::services.PhotonVisibilityService.YMax, @local::services.PhotonVisibilityService.ZMax]
+
+physics.producers.generator.NFirstVoxel: 0
+physics.producers.generator.NLastVoxel:  -1
+
+physics.producers.generator.NXSteps:  @local::services.PhotonVisibilityService.NX
+physics.producers.generator.NYSteps:  @local::services.PhotonVisibilityService.NY
+physics.producers.generator.NZSteps:  @local::services.PhotonVisibilityService.NZ
+
+
 # To disable wireplane absorption, uncomment this line
 #services.LArG4Parameters.OpticalParamModels: ["TransparentPlaneAction"]

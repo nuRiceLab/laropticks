@@ -25,10 +25,12 @@ namespace laropticks {
         double wavelength;
         double boundary;
     };
+
     struct Visibility{
         int id, sensorid;
         double Visibility;
     };
+
     struct PhotonGen{
         int evtID;
         double x;

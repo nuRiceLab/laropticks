@@ -11,9 +11,10 @@
 #ifndef OPTICKS_OPTICKSHITHANDLER_HH
 #define OPTICKS_OPTICKSHITHANDLER_HH
 
-
+// LArSoft
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 #include "lardataobj/Simulation/OpDetBacktrackerRecord.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
 // Opticks headers
 #include "SEvt.hh"
@@ -47,10 +48,6 @@ namespace laropticks {
             }
             return instance;
         };
-
-
-
-
 
         void CollectHits(int eventID,std::map<int, sim::OBTRHelper> obtrHelpers);
 

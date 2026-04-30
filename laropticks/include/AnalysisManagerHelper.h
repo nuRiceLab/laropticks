@@ -6,6 +6,9 @@
  *  Date: 3/18/26
  *  Description: AnalysisManagerHelper: Helps with debugging and validation of PDFastSimOpticks
  */
+// LArSoft
+#include "messagefacility/MessageLogger/MessageLogger.h"
+
 // Art
 #include "art_root_io/TFileService.h"
 #include "art_root_io/TFileDirectory.h"

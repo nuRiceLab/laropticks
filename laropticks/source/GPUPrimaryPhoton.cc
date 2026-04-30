@@ -28,9 +28,9 @@ namespace laropticks
             	  wavelength=1240/energy;
 				  spht.wavelength=wavelength; // nm
             	  spht.time=pos.t();
-				  //std::cout << "position " << pht.Vx(0) << " " <<pht.Vy(0)<< " " <<pht.Vz(0) << "Time " << spht.time << " Wavelength " <<spht.wavelength << std::endl;
-				  //std::cout << "mom " << mom.X() << " " <<mom.Y()<< " " <<mom.Z()<< std::endl;
-				  //std::cout << "pol " << pht.Polarization()[0] << " " << pht.Polarization()[1]<< " " <<pht.Polarization()[2]<< std::endl;
+				  // mf::LogInfo ("GPUPrimaryPhoton) << "position " << pht.Vx(0) << " " <<pht.Vy(0)<< " " <<pht.Vz(0) << "Time " << spht.time << " Wavelength " <<spht.wavelength ;
+				  // mf::LogInfo ("GPUPrimaryPhoton) << "mom " << mom.X() << " " <<mom.Y()<< " " <<mom.Z();
+				  // mf::LogInfo ("GPUPrimaryPhoton) << "pol " << pht.Polarization()[0] << " " << pht.Polarization()[1]<< " " <<pht.Polarization()[2];
 
            		  spht.ParentId=0;
 				  if(fsave_pht){
@@ -54,7 +54,7 @@ namespace laropticks
 
 	void GPUPrimaryPhoton::setPhotons(std::vector<sphoton> sphotons)
 	{
-		std::cout << " [GPUPrimaryPhoton::setPhotons] Setting Photons ...." << std::endl;
+		 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::setPhotons] Setting Photons ...." << std::endl;
 		size_t num_floats = sphotons.size()*17;
        	float* data = reinterpret_cast<float*>(sphotons.data());
        	NP* photons = NP::MakeFromValues<float>(data, num_floats);
@@ -63,7 +63,7 @@ namespace laropticks
 	}
 	void GPUPrimaryPhoton::Batcher()
 	{
-       	std::cout << " [GPUPrimaryPhoton::Batcher] Deciding if Batching Needed ...." << std::endl;
+       	 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Batcher] Deciding if Batching Needed ...." << std::endl;
 
        	auto sphotons = GetSPhotons();
 
@@ -72,7 +72,7 @@ namespace laropticks
        	// Simulate in batch
        	if(CollectedPhotons>=maxPhoton)
 		{
-       		std::cout << "[GPUPrimaryPhoton::Batcher] Simulating in Batch Mode ...." << std::endl;
+       		 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Batcher] Simulating in Batch Mode ...." << std::endl;
 
        		for (std::size_t i =0 ; i < CollectedPhotons; i+=maxPhoton)
 			{
@@ -85,7 +85,7 @@ namespace laropticks
 			}
 		}else
 		{
-			std::cout << "[GPUPrimaryPhoton::Batcher] Simulating Photons at Once ...." << std::endl;
+			 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Batcher] Simulating Photons at Once ...." << std::endl;
 			setPhotons(sphotons);
        		Simulate();
 		}
@@ -95,12 +95,12 @@ namespace laropticks
 	void GPUPrimaryPhoton::Simulate()
 	{
 
-        //mf::LogTrace("GPUPrimaryPhoton::Simulate") << "Initiation of PrimaryPhoton Simulation Within GPU";
+        //mf::LogTrace("GPUPrimaryPhoton::Simulate") << "Initiation of PrimaryPhoton Simulation Within GPU"<< std::endl;
        	G4CXOpticks * g4xc=G4CXOpticks::Get();
        	//Event id needed in here
 		OpticksHitHandler * OpticksHits = OpticksHitHandler::getInstance();
-       	std::cout << " [GPUPrimaryPhoton::Simulate]: Simulating Photons Within GPU for EventID " << eventID << " ...."  << std::endl;
-		std::cout << " [GPUPrimaryPhoton::Simulate]: Photons Collected = " << GetSPhotons().size() <<std::endl;
+       	 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Simulate]: Simulating Photons Within GPU for EventID " << eventID << " ...."  << std::endl;
+		 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Simulate]: Photons Collected = " << GetSPhotons().size() <<std::endl;
 		g4xc->simulate(eventID,0);
        	cudaDeviceSynchronize();
 
@@ -111,7 +111,7 @@ namespace laropticks
 			OpticksHits->CollectHits(eventID,obtrHelpers);
 
 		}
-       	else std::cout << "[GPUPrimaryPhoton::Simulate]: No Hits" << std::endl;
+       	else  mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Simulate]: No Hits" << std::endl;
 
 		//Event id needed here
        	g4xc->reset(eventID);

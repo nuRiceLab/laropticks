@@ -12,10 +12,10 @@ namespace laropticks{
   void OpticksInterface::init(){
 	  if(World) return; // return if world exist since no need to re-initilize
   	  // Initialize Opticks Logs for Information and Debugging
-	  std::cout << "--- Initiation OpticksInterface ----" << std::endl;
+	   mf::LogInfo ("OpticksInterface") << "--- Initiation OpticksInterface ----" << std::endl;
 	  mf::LogTrace("OpticksInterface::init") << "Initializing OpticksInterface";
 
-	  //std::cout << "Number of Detectors " << fGeom.NAuxDets() << std::endl;
+	  // mf::LogInfo ("OpticksInterface) << "Number of Detectors " << fGeom.NAuxDets() ;
       int argc = 0; char** argv = nullptr;
       OPTICKS_LOG(argc, argv);
       cudaDeviceSynchronize();
@@ -50,10 +50,10 @@ namespace laropticks{
 
   // Adjust this function
   void OpticksInterface::CollectPhotons(G4Track *track,sim::SimEnergyDeposit edep){
-	  //std::cout << "Collecting Photons .." << std::endl;
+	  // mf::LogInfo ("OpticksInterface) << "Collecting Photons .." << std::endl;
       // Example of getting material properties
 	  if(!track){
-		std::cout << "Null Track !! TrkID " << edep.TrackID() << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "Null Track !! TrkID " << edep.TrackID()<< std::endl ;
 		 return;
 	 }
 
@@ -71,8 +71,8 @@ namespace laropticks{
 	  auto pTable= mat->GetMaterialPropertiesTable();
 
 	  if(!pTable){
-			std::cout << "Material Name " <<  mat->GetName() << std::endl;
-			std::cout << "Null Material Properties Table" << std::endl;
+			 mf::LogInfo ("OpticksInterface") << "Material Name " <<  mat->GetName() <<std::endl;
+			 mf::LogInfo ("OpticksInterface") << "Null Material Properties Table" << std::endl;
 			return;
 		}
 
@@ -103,7 +103,7 @@ namespace laropticks{
       // Simulate in batch
 
       if(CollectedPhotons>=maxPhoton) {
-		std::cout << "Simulating in Batch Mode ...." << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "Simulating in Batch Mode ...." << std::endl;
 			Simulate();
 	  };
 
@@ -123,7 +123,7 @@ namespace laropticks{
       cudaDeviceSynchronize();
       if(SEvt::GetNumHit(0)>0){
           OpticksHits->CollectHits(eventID,obtrHelpers);
-      }else std::cout << "OpticksInterface::Simulate: No Hits" << std::endl;
+      }else  mf::LogInfo ("OpticksInterface") << "OpticksInterface::Simulate: No Hits" << std::endl;
 	  //Event id needed here
       g4xc->reset(eventID);
 
@@ -142,7 +142,7 @@ namespace laropticks{
   		{
   			mpt=ArapucaWindowMaterial->GetMaterialPropertiesTable();
   			ArapucaSurface->SetMaterialPropertiesTable(mpt);
-			if(!mpt) std::cout << "ArapucaSurface, No Materials Table" << std::endl;
+			if(!mpt)  mf::LogInfo ("OpticksInterface") << "ArapucaSurface, No Materials Table" << std::endl;
   		}
   		else
   		{
@@ -162,8 +162,8 @@ namespace laropticks{
 
   	G4VPhysicalVolume * physv1=nullptr;
 	if(nChannels>0){
-		std::cout << "Collecting Detector Info From LArSoft .....";
-		std::cout << "Number of PhotonDetectors " <<  fGeom->NOpDets() <<std::endl;
+		 mf::LogInfo ("OpticksInterface") << "Collecting Detector Info From LArSoft ....."<< std::endl;
+		 mf::LogInfo ("OpticksInterface") << "Number of PhotonDetectors " <<  fGeom->NOpDets() <<std::endl;
 		// Getting the volume name that photons are comming from before reaching optical detector
 		auto cryoID = fGeom->PositionToCryostatID(fGeom->OpDetGeoFromOpDet(0).GetCenter()); // Assuming this name common for all Cryos
 		auto const& cryo = fGeom->Cryostat(cryoID);  // Get Cryo object
@@ -171,7 +171,7 @@ namespace laropticks{
 		CryoName=GetVolumeName(fGeom->VolumeName(cryoCenter))+"_PV";        // Obtain the volume name from the center
 		physv1=phyStore->GetVolume(CryoName);  // Find the volume associated with the CryonName
 		if(!physv1) {
-			std::cout << "could nt find the physical volume " << CryoName << std::endl;
+			 mf::LogInfo ("OpticksInterface") << "could nt find the physical volume " << CryoName << std::endl;
 			assert(false);
 		}
 		// Loop through each detector and generate surfaces for sensitive detectors
@@ -180,7 +180,7 @@ namespace laropticks{
 		for (size_t i =0 ; i < nChannels; ++i) {
 			geo::OpDetGeo const& opDet = fGeom->OpDetGeoFromOpDet(i);
 
-			//std::cout << opDet.OpDetInfo() << std::endl;
+			// mf::LogInfo ("OpticksInterface) << opDet.OpDetInfo() ;
 			volName=GetVolumeName(fGeom->VolumeName(opDet.GetCenter()));// Get Detector Name by its position and remove the cryoID
 
 			detName=volName+"_PV"; // Assign PV to end of the string since G4 likes this
@@ -190,13 +190,13 @@ namespace laropticks{
 
 			// Generate Skin or Border Surface
 			createG4SkinSurface(volName,ArapucaSurface);
-			//std::cout << "CryoName " << physv1->GetName() << " DetName " << detName << std::endl;
+			// mf::LogInfo ("OpticksInterface) << "CryoName " << physv1->GetName() << " DetName " << detName ;
 			//createG4BorderSurface(physv1,detName,ArapucaSurface);
 		}
 
 	}
     else {
-		std::cout << "Detectors are nt initialized by LArSoft! We manually parse them here... " << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "Detectors are nt initialized by LArSoft! We manually parse them here... " << std::endl;
   		XercesDOMParser parser;
   		parser.parse((GDMLPath).c_str());
 
@@ -234,7 +234,7 @@ namespace laropticks{
 
   				if ((type=="PD" || type=="SensDet") and value=="PhotonDetector")
   				{
-  					//std::cout << "Attaching sensitive detector " << value << " to volume " << volName+"_PV" << std::endl ;
+  					// mf::LogInfo ("OpticksInterface) << "Attaching sensitive detector " << value << " to volume " << volName+"_PV" << std::endl ;
   					obtrHelpers.emplace(sid,sid);
   					DetectorIds.insert(std::pair<G4String,G4int>(volName+"_PV",sid++));
   				}
@@ -254,7 +254,7 @@ namespace laropticks{
 	void OpticksInterface::beginJob()
 	{
         mf::LogTrace("OpticksInterface::beginJob") << " Opticks Initialization";
-		std::cout << "Begin Job" << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "Begin Job" << std::endl;
         // Initialize the variables
 
 		// initialize the parser
@@ -277,8 +277,8 @@ namespace laropticks{
 	* Simulate primary photons per art Event \c art::Event .
 	*/
 	OpticksInterface::UPVecBTR OpticksInterface::executeEvent(int VoxelID){
-		std::cout << "OpticksInterface::executeEvent for primary photon production" << std::endl;
-  		std::cout << "Number of Primary Photons " << fParticleList->size() << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "OpticksInterface::executeEvent for primary photon production" << std::endl;
+  		 mf::LogInfo ("OpticksInterface") << "Number of Primary Photons " << fParticleList->size() << std::endl;
 
         auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
         //double vx,vy,vz,px,py,pz,mx,my,mz, wavelength;
@@ -290,7 +290,7 @@ namespace laropticks{
         if(obtrHelpers.size()>0){
 		for (auto& opbtr: obtrHelpers)
 			records->emplace_back(opbtr.second);
-		} else std::cout << "obtrHelper seems empty ...." << std::endl;
+		} else  mf::LogInfo ("OpticksInterface") << "obtrHelper seems empty ...." << std::endl;
 		PhotonGen->reset();
 		return records;
 	}
@@ -301,7 +301,7 @@ namespace laropticks{
     OpticksInterface::UPVecBTR OpticksInterface::executeEvent(VecSED const& edeps)
     {
 		if(Trackmps==nullptr) initTracks();
-		std::cout << "OpticksInterface::executeEvent" << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "OpticksInterface::executeEvent" << std::endl;
 
         mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
 		// Optical Back Tracker
@@ -322,7 +322,7 @@ namespace laropticks{
   		double edeposit;
 
 		// Get The Parent Information
-		std::cout << " Size of Energy Depositions " <<  edeps.size() << std::endl;
+		 mf::LogInfo ("OpticksInterface") << " Size of Energy Depositions " <<  edeps.size() ;
 		G4Track * aTrack=nullptr;
 
 		int tempTrackID=-1;
@@ -332,13 +332,12 @@ namespace laropticks{
             if (!(num_points % 10000))
 			{
 
-			  std::cout <<" Opticks "
+			   mf::LogInfo ("OpticksInterface") <<" Opticks "
                 << "SimEnergyDeposit: " << num_points << " " << edepi.TrackID() << " " << edepi.Energy()
                 << "\nStart: " << edepi.Start() << "\nEnd: " << edepi.End()
                 << "\nNF: " << edepi.NumFPhotons() << "\nNS: " << edepi.NumSPhotons()
                 << "\nSYR: " << edepi.ScintYieldRatio()
-				<< "PDG: " << edepi.PdgCode()<<"\n"
-            	<< std::endl;
+				<< "PDG: " << edepi.PdgCode()<<"\n" ;
 
 
             }
@@ -347,10 +346,10 @@ namespace laropticks{
 				auto it = Trackmps->find(tempTrackID );
 				if (it != Trackmps->end()){
 					aTrack = it->second;
-					//std::cout << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() << std::endl;
+					// mf::LogInfo ("OpticksInterface) << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() ;
 				}
 				else {
-					std::cout<<"No Track Found for TrkID " << tempTrackID <<std::endl;
+					 mf::LogInfo ("OpticksInterface::executeEvent")<<" No Track Found for TrkID " << tempTrackID <<std::endl;
 					continue;
 				}
 			}
@@ -376,7 +375,7 @@ namespace laropticks{
 			for (auto& opbtr: obtrHelpers)
 				records->emplace_back(opbtr.second);
 
-		} else std::cout << "obtrHelper seems empty ...." << std::endl;
+		} else  mf::LogInfo ("OpticksInterface") << "obtrHelper seems empty ...." << std::endl;
 
 
 		Trackmps->clear();
@@ -392,13 +391,13 @@ namespace laropticks{
 	*/
 	void OpticksInterface::endJob()
 	{
-  		std::cout << "OpticksInterface::endJob" << std::endl;
+  		 mf::LogInfo ("OpticksInterface") << "OpticksInterface::endJob" << std::endl;
 
 		mf::LogTrace("OpticksInterface::endJob") << "Finalizing the job process for Opticks";
   		// Write and Close File
   		auto analysisManager = AnalysisManagerHelper::getInstance();
   		/*if (analysisManager){
-  			std::cout << "Saving Events to " << analysisManager->GetFileName() <<" root file .." << std::endl;
+  			 mf::LogInfo ("OpticksInterface) << "Saving Events to " << analysisManager->GetFileName() <<" root file .." << std::endl;
   			analysisManager->Write();
   			analysisManager->CloseFile();
   		}*/
@@ -419,7 +418,7 @@ namespace laropticks{
 
      	AnalysisManagerHelper* analysisManager = AnalysisManagerHelper::getInstance();
 	    analysisManager->setFileService(fTFileService);
-  		//if (analysisManager) analysisManager->createDir("Opticks");
+
 
 	    //Opticks Hits
         analysisManager->initOpticksHitTree();
@@ -435,9 +434,9 @@ namespace laropticks{
 
 }
 	void OpticksInterface::initTracks(){
-		std::cout << "OpticksInterface::initTracks" << std::endl;
-		std::cout << "Setting up Tracks" << std::endl;
-		std::cout << "Amount of Particles " << fParticleList->size() << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "OpticksInterface::initTracks" << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "Setting up Tracks" << std::endl;
+		 mf::LogInfo ("OpticksInterface") << "Amount of Particles " << fParticleList->size()<< std::endl; ;
 
 		Trackmps = new std::map<int, G4Track*>();
 		for (size_t ip=0; ip<fParticleList->size(); ip++){
@@ -454,7 +453,7 @@ namespace laropticks{
 			ftracks.push_back(trk);
 			fDynamicParticles.push_back(DParticle);
 			Trackmps->insert( std::make_pair(mp.TrackId(), trk) );
-			//std::cout << "TrackID " << trackID << " Pdgcode " << mp.PdgCode() << " parentID " << mp.Mother()<< std::endl;
+			// mf::LogInfo ("OpticksInterface) << "TrackID " << trackID << " Pdgcode " << mp.PdgCode() << " parentID " << mp.Mother();
 		}
 	}
 	void OpticksInterface::createG4SkinSurface(std::string VolName, G4OpticalSurface* surface){
@@ -463,19 +462,19 @@ namespace laropticks{
 		auto lv=lvStore->GetVolume(VolName);
 
   		if(lv)  new G4LogicalSkinSurface(VolName+"_SkinSurface",lv,surface);
-  		else std::cout << "Cant find logical volume for " << VolName << std::endl;
+  		else  mf::LogInfo ("OpticksInterface") << "Cant find logical volume for " << VolName << std::endl;
 	}
 
 	void OpticksInterface::createG4BorderSurface(G4VPhysicalVolume *phyv1, std::string v2, G4OpticalSurface* surface){
   		mf::LogTrace("OpticksInterface::createBorderSurface")  << "Creating Border Surface ..." << std::endl;
 		if(phyv1==nullptr){
-			std::cout << "Physical Volume pointer is empty!!" << std::endl;
+			 mf::LogInfo ("OpticksInterface") << "Physical Volume pointer is empty!!" << std::endl;
 			assert(false);
 		}
   		auto phyv2=phyStore->GetVolume(v2);
 
   		if(phyv2) new G4LogicalBorderSurface(v2+"_BorderSurface", phyv1, phyv2, surface);
-  		else std::cout << "Cant find physical volume for " << v2 << std::endl;
+  		else  mf::LogInfo ("OpticksInterface") << "Cant find physical volume for " << v2 ;
     }
 
 	std::string OpticksInterface::GetVolumeName(const std::string& s){

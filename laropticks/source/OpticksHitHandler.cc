@@ -10,7 +10,7 @@ namespace laropticks{
   void OpticksHitHandler::CollectHits(int eventID,std::map<int, sim::OBTRHelper> obtrHelpers) {
 
       //Collecting Opticks Photons
-	  std::cout << "Collecting Hits from GPU ...." << std::endl;
+	   mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::CollectHits] Collecting Hits from GPU ...." << std::endl;
 
 	  // --- Get Hits ----
       SEvt* sev             = SEvt::Get_EGPU();
@@ -61,7 +61,7 @@ namespace laropticks{
   void OpticksHitHandler::SaveHits(){
 
       AnalysisManagerHelper * anaHelper= AnalysisManagerHelper::getInstance();
-      std::cout << "[OpticksHitHandler::SaveHits] Saving GPU Hits ..." << std::endl;
+       mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::SaveHits] Saving GPU Hits ..." << std::endl;
       for (auto it : hits){
           anaHelper->FillHitTree(it);
       }
@@ -76,19 +76,20 @@ namespace laropticks{
   void OpticksHitHandler::SaveVisibilities(){
 
       AnalysisManagerHelper * anaHelper= AnalysisManagerHelper::getInstance();
-      std::cout << "[OpticksHitHandler::SaveVisibilities] Saving GPU Visibilities ..." << std::endl;
+       mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::SaveVisibilities] Saving GPU Visibilities ..." << std::endl;
 
       Visibility fvis;
       for (auto &it : fSensorCounts)
       {
 
-        //std::cout << "Sid " <<it.first << " Count " << it.second << " PhotonCount " << PhotonCount << " vis " <<vis <<std::endl;
+        // mf::LogInfo("OpticksHitHandler") << "Sid " <<it.first << " Count " << it.second << " PhotonCount " << PhotonCount << " vis " <<vis <<std::endl;
 
         fvis.id=fVoxelID;
         fvis.sensorid=it.first;
 		double vis = (double (it.second) / double(PhotonCount));
+
         fvis.Visibility= vis;
-        anaHelper->FillVoxelTree(fvis);
+		if(vis>0) anaHelper->FillVoxelTree(fvis);
         // Reseting for Next Event
         it.second=0;
       }

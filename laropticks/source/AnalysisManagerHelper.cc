@@ -126,7 +126,6 @@ namespace laropticks {
 		fVisTTree->Branch("Voxel", &fVisibilityBranch.id, "Voxel/I");
 		fVisTTree->Branch("OptDetID", &fVisibilityBranch.sensorid, "OptDetID/I");
 		fVisTTree->Branch("Visibility", &fVisibilityBranch.Visibility, "Visibility/D");
-
     }
     void AnalysisManagerHelper::initOpticksHitTree(){
         fOpticksHitTTree = fTFileService->make<TTree>("OpticksHits", "Opticks GPU Photon Hits");
