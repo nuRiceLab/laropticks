@@ -6,7 +6,7 @@ namespace laropticks
 
        void GPUPrimaryPhoton::CollectPhotonInfo(std::vector<simb::MCParticle> const* phtlist,bool &fsave_pht){
   			 // Prepare the photons
-			double energy=0,wavelength=0;
+			double energy=0,wavelength=0, energyEv=0;
 			G4ThreeVector pol,mom,momunit;
 			G4LorentzVector pos;
             for (size_t ip=0; ip<phtlist->size(); ip++)
@@ -21,12 +21,13 @@ namespace laropticks
 				  pol=G4ThreeVector(pht.Polarization().X(),pht.Polarization().Y(),pht.Polarization().Z());
 				  momunit=mom.unit();
 
-                  spht.pos=make_float3(pos.x()*10,pos.y()*10,pos.z()*10); //cm --> mm
+                  spht.pos=make_float3(pos.x()*cm,pos.y()*cm,pos.z()*cm); //cm --> mm
                   spht.mom=make_float3(momunit.x(),momunit.y(),momunit.z());
                   spht.pol=make_float3(pol.x(),pol.y(),pol.z());
-                  energy=1e9*pht.E(); // eV
-            	  wavelength=1240/energy;
-				  spht.wavelength=wavelength; // nm
+                  energy=(pht.E()*GeV);
+            	  energyEv=energy/eV; // Convert to eV  (Note: LArSoft uses GeV for energy as default)
+            	  wavelength=((CLHEP::h_Planck * CLHEP::c_light)/(energy*eV));
+				  spht.wavelength=wavelength/nm; // Opticks expect wavelength in nm
             	  spht.time=pos.t();
 				  // mf::LogInfo ("GPUPrimaryPhoton) << "position " << pht.Vx(0) << " " <<pht.Vy(0)<< " " <<pht.Vz(0) << "Time " << spht.time << " Wavelength " <<spht.wavelength ;
 				  // mf::LogInfo ("GPUPrimaryPhoton) << "mom " << mom.X() << " " <<mom.Y()<< " " <<mom.Z();
@@ -35,7 +36,7 @@ namespace laropticks
            		  spht.ParentId=0;
 				  if(fsave_pht){
 				  		AnalysisManagerHelper * AnaMngr = AnalysisManagerHelper::getInstance();
-						AnaMngr->FillPhotonGenTree(eventID,pos,momunit,pol ,wavelength,energy);
+						AnaMngr->FillPhotonGenTree(eventID,pos,momunit,pol ,wavelength,energyEv);
 				  }
 
                   photons.push_back(spht);
