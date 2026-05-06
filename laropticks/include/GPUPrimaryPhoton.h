@@ -37,6 +37,13 @@ namespace laropticks {
                 return instance;
             };
 
+            static void deleteInstance(){
+                if(instance != nullptr){
+                    delete instance;
+                    instance = nullptr;
+                }
+            };
+
             void reset();
             void setEventID(int &id);
             std::vector<sphoton> GetSPhotons();
@@ -49,6 +56,7 @@ namespace laropticks {
 
         private:
             GPUPrimaryPhoton(){};
+            ~GPUPrimaryPhoton();
             static GPUPrimaryPhoton * instance;
             std::vector<sphoton> photons;
             int eventID;

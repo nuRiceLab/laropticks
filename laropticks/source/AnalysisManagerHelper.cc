@@ -1,8 +1,7 @@
-//
-// Created by ilker on 11/5/25.
-//
+
 #include "laropticks/include/AnalysisManagerHelper.h"
 namespace laropticks {
+
     // Initialize Static Member
     AnalysisManagerHelper * AnalysisManagerHelper::instance = nullptr;
     G4Mutex AnalysisManagerHelper::mtx;
@@ -11,6 +10,14 @@ namespace laropticks {
         return G4ScintPhotons;
     }
 
+     AnalysisManagerHelper::~AnalysisManagerHelper()
+    {
+
+         if(fDetectIds != nullptr) {
+             delete fDetectIds;
+             fDetectIds = nullptr;
+        }
+    }
 
     G4int AnalysisManagerHelper::GetOpticksScintPhotons(){
         return OpticksScintPhotons;

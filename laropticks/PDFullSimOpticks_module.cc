@@ -75,6 +75,8 @@ namespace laropticks {
         const std::vector<int> default_TPCs{};
         fhicl::Atom<art::InputTag> SimulationLabel{Name("SimulationLabel"),
                                                    Comment("SimEnergyDeposit label.")};
+    	fhicl::Atom<bool> SavePhotons{Name("SavePrimary"),
+    									Comment("Enable or disable simulation mode.")};
     };
 
 
@@ -89,6 +91,7 @@ namespace laropticks {
   private:
 	const art::InputTag fSimTag;
     OpticksInterface* opticks;
+  	bool savePhotons;
 	phot::PhotonVisibilityService const* fPhotonVisService = nullptr;
 	art::ServiceHandle<art::TFileService> fTFileService;
 
@@ -101,8 +104,7 @@ namespace laropticks {
   PDFullSimOpticks::PDFullSimOpticks(Parameters const& config) : art::EDProducer{config}
 											   ,fSimTag(config().SimulationLabel())
 											   ,opticks(nullptr)
-
-
+	                                           ,savePhotons(config().SavePhotons())
 {
     mf::LogInfo("PDFullSimOpticks") << "Initializing PDFullSimOpticks." << std::endl;
 
@@ -114,7 +116,8 @@ namespace laropticks {
 
 	// Set Opticks Parameters
 	opticks->setSimTag(fSimTag.label());
-	opticks->setSavePhotons(true); // Saving photons produced during voxelization to an external file for testing.
+	opticks->setSavePhotons(savePhotons); // Saving photons produced during voxelization to an external file for testing.
+
 	// Saving results to a common root file
 	opticks->setFileService(fTFileService.get());
   	if (fSimTag == "LightSource") fPhotonVisService = art::ServiceHandle<phot::PhotonVisibilityService const>().get();
@@ -168,6 +171,7 @@ void laropticks::PDFullSimOpticks::endJob()
 {
   mf::LogTrace("PDFullSimOpticks") << "endJob" << std::endl;
   opticks->endJob();
+
 }
 
 

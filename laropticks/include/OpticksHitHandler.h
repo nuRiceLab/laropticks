@@ -49,6 +49,15 @@ namespace laropticks {
             return instance;
         };
 
+        static void deleteInstance()
+        {
+            G4AutoLock lock(&mtx);
+            if(instance != nullptr){
+                delete instance;
+                instance = nullptr;
+            }
+        };
+
         void CollectHits(int eventID,std::map<int, sim::OBTRHelper> obtrHelpers);
 
         void AddHits();
@@ -60,6 +69,7 @@ namespace laropticks {
 		void setVoxelID(int &id);
     private:
         OpticksHitHandler(){};
+        ~OpticksHitHandler();
         static OpticksHitHandler * instance;
         static G4Mutex mtx;
         std::vector<sphoton> sphotons;

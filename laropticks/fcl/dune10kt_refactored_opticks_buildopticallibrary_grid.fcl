@@ -137,6 +137,7 @@ physics:
    opticks:  {
           module_type : PDFullSimOpticks
           SimulationLabel: "LightSource"
+          SavePrimary: false
    }
  }
 

@@ -1,4 +1,5 @@
 
+#include "../include/OpticksHitHandler.h"
 #include "laropticks/include/OpticksHitHandler.h"
 
 namespace laropticks{
@@ -6,7 +7,12 @@ namespace laropticks{
   // Opticks Hit Collection
   // Handles getting hits from opticks to a file
   OpticksHitHandler * OpticksHitHandler::instance = nullptr;
-
+  OpticksHitHandler::~OpticksHitHandler(){
+		mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::~OpticksHitHandler] Destroying OpticksHitHandler instance" << std::endl;
+		// Clear the hits
+		hits.clear();
+		hits.shrink_to_fit();
+  }
   void OpticksHitHandler::CollectHits(int eventID,std::map<int, sim::OBTRHelper> obtrHelpers) {
 
       //Collecting Opticks Photons
@@ -17,6 +23,7 @@ namespace laropticks{
       sphoton::Get(sphotons, sev->getHit());
 
 	  feventID=eventID;
+  	  hits.reserve(sphotons.size());
       for (auto & hit : sphotons) {
           OpticksHit ohit= OpticksHit();
           ohit.evtID=eventID;
@@ -74,6 +81,7 @@ namespace laropticks{
   }
 
   void OpticksHitHandler::SaveVisibilities(){
+
 
       AnalysisManagerHelper * anaHelper= AnalysisManagerHelper::getInstance();
        mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::SaveVisibilities] Saving GPU Visibilities ..." << std::endl;

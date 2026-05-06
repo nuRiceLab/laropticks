@@ -42,7 +42,8 @@ physics:
      IonAndScint: @local::dunefd_ionandscint
      optical:  {
                       module_type : PDFullSimOpticks
-                      SimulationLabel:       "IonAndScint"
+                      SimulationLabel: "IonAndScint"
+                      SavePrimary: false
      }
      rns:         { module_type: "RandomNumberSaver" }
   }

@@ -1,6 +1,6 @@
 #!/bin/bash -l 
 
-export GEOM=OpticksTest  # Geometry name
+export GEOM=LArSoft_Test  # Geometry name
 #source env.sh
 export RNG_SEED=0
 export RNG_OFFSET=0
@@ -11,7 +11,7 @@ export OPTICKS_MAX_SLOT=$OPTICKS_MAX_PHOTON
 export OPTICKS_PROPAGATE_EPSILON=0.01
 export OPTICKS_PROPAGATE_EPSILON0=0.01
 export OPTICKS_MAX_BOUNCE=100
-export OPTICKS_INTEGRATION_MODE=3  # Running both GPU and CPU simulation
+export OPTICKS_INTEGRATION_MODE=1  # Running both GPU and CPU simulation
 export OPTICKS_EVENT_MODE=Minimal  # Hits or Minimal Prefered. Hits will create .npy files in /tmp/user/opticks/GEOM/NEXUS_CRAB/nexus/ALL
 ### Opticks Detector Identification (Boundary Names for Identifying small number of detectors)
 ## Skipahead is used for offseting the random generator values so photons produce per event is not repeated
@@ -63,6 +63,11 @@ export OPTICKS_EVENT_SKIPAHEAD=$OPTICKS_MAX_PHOTON
 #export GBndLib=INFO
 #export ShimG4OpAbsorption=INFO
 #export G4CXOpticks__simulate_saveEvent=0
+#export SBT=INFO
+#export GAS_Builder=INFO
+#export GPropertyLib=INFO
+#export GSurfaceLib=INFO
+#export SBT=INFO
 export G4CXOpticks__setGeometry_saveGeometry=$HOME/.opticks/GEOM/$GEOM
 export G4CXOpticks__saveGeometry_saveGGeo=0
 export GGeo__postDirectTranslation_save=0

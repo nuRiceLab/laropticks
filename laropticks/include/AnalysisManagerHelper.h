@@ -46,6 +46,15 @@ class AnalysisManagerHelper
             return instance;
         }
 
+        static void deleteInstance()
+        {
+            G4AutoLock lock(&mtx);
+            if(instance != nullptr) {
+                delete instance;
+                instance = nullptr;
+            }
+        }
+
         G4int GetG4ScintPhotons();
         G4int GetOpticksScintPhotons();
         G4int GetG4CerenkovPhotons();
@@ -74,9 +83,10 @@ class AnalysisManagerHelper
         void FillHitTree(laropticks::OpticksHit &hit);
         void FillVoxelTree(laropticks::Visibility &vis);
         void FillPhotonGenTree(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy);
-
+        ~AnalysisManagerHelper();
     private:
         AnalysisManagerHelper(){};
+
         static G4Mutex mtx;
         static AnalysisManagerHelper* instance;
         G4int G4CerenkovPhotons{0};

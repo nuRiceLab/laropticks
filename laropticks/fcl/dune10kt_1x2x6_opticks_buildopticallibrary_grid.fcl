@@ -97,9 +97,9 @@ services.PhotonVisibilityService: {
   UseAutomaticVoxels: false
   UseCryoBoundary:  false
   ReflectOverZeroX: false
-  NX:  17  # 17 voxels along X direction
-  NY:  17  # 17 voxels along Y direction
-  NZ:  17  # 17 voxels along Z direction
+  NX:  100  # 17 voxels along X direction
+  NY:  100  # 17 voxels along Y direction
+  NZ:  100  # 17 voxels along Z direction
 
   XMin: -360
   XMax: 360
@@ -121,7 +121,7 @@ services.LArPropertiesService.ScintPreScale: 1.0
 source:
 {
   module_type: EmptyEvent
-  maxEvents:   4913           # Number of events to create
+  maxEvents:   1000000           # Number of events to create
   firstRun:    1           # Run number to use for this file
   firstEvent:  1           # number of first event in the file
 }
@@ -139,6 +139,7 @@ physics:
    opticks:  {
           module_type : PDFullSimOpticks
           SimulationLabel: "LightSource"
+          SavePrimary: false
    }
  }
 
@@ -191,7 +192,7 @@ physics.analyzers.pmtresponse.MakeOpDetEventsTree: true
 # Override the default number of photons to generate, and the region to generate them in, for the generator module.
 #The region is set to match the geometry of the photon visibility service, so that we only generate photons in the region that we are simulating for the library.
 
-physics.producers.generator.N: 1000000
+physics.producers.generator.N: 1000
 physics.producers.generator.NUseCustomRegion: true
 physics.producers.generator.NRegionMin: [ @local::services.PhotonVisibilityService.XMin, @local::services.PhotonVisibilityService.YMin, @local::services.PhotonVisibilityService.ZMin]
 physics.producers.generator.NRegionMax: [ @local::services.PhotonVisibilityService.XMax, @local::services.PhotonVisibilityService.YMax, @local::services.PhotonVisibilityService.ZMax]

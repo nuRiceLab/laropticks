@@ -4,6 +4,11 @@ namespace laropticks
 {
       GPUPrimaryPhoton * GPUPrimaryPhoton::instance = nullptr;
 
+      GPUPrimaryPhoton::~GPUPrimaryPhoton(){
+            mf::LogInfo("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::~GPUPrimaryPhoton] Destroying GPUPrimaryPhoton instance" << std::endl;
+            reset();
+      }
+
        void GPUPrimaryPhoton::CollectPhotonInfo(std::vector<simb::MCParticle> const* phtlist,bool &fsave_pht){
   			 // Prepare the photons
 			double energy=0,wavelength=0, energyEv=0;
@@ -59,8 +64,13 @@ namespace laropticks
 		size_t num_floats = sphotons.size()*17;
        	float* data = reinterpret_cast<float*>(sphotons.data());
        	NP* photons = NP::MakeFromValues<float>(data, num_floats);
-       	photons->reshape({ static_cast<int64_t>(sphotons.size()), 17});
-       	SEvt::SetInputPhoton(photons);
+       	if(photons) {
+       	    photons->reshape({ static_cast<int64_t>(sphotons.size()), 17});
+       	    SEvt::SetInputPhoton(photons);
+       	    // NP is managed by SEvt, do not delete here
+       	} else {
+       	    mf::LogError("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::setPhotons] Failed to create photon array" << std::endl;
+       	}
 	}
 	void GPUPrimaryPhoton::Batcher()
 	{
@@ -75,12 +85,13 @@ namespace laropticks
 		{
        		 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Batcher] Simulating in Batch Mode ...." << std::endl;
 
-       		for (std::size_t i =0 ; i < CollectedPhotons; i+=maxPhoton)
+       		for (std::size_t i = 0; i < CollectedPhotons; i += maxPhoton)
 			{
-				std::size_t end =std::min(i+maxPhoton,sphotons.size());
+				std::size_t end = std::min(i + maxPhoton, sphotons.size());
        			std::vector<sphoton> batch(
-	   			std::make_move_iterator(sphotons.begin() + i),
-	   			std::make_move_iterator(sphotons.begin() + end));
+	   			sphotons.begin() + i,
+	   			sphotons.begin() + end);
+
 				setPhotons(batch);
 				Simulate();
 			}
@@ -104,7 +115,6 @@ namespace laropticks
 		 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Simulate]: Photons Collected = " << GetSPhotons().size() <<std::endl;
 		g4xc->simulate(eventID,0);
        	cudaDeviceSynchronize();
-
 
 		if(SEvt::GetNumHit(0)>0){
 			OpticksHits->setVoxelID(fVoxelID);

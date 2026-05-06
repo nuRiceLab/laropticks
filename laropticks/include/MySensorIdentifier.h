@@ -27,7 +27,7 @@ namespace laropticks {
 
   public:
       MySensorIdentifier(std::map<G4String, G4int> &ids);
-      ~MySensorIdentifier();
+      virtual ~MySensorIdentifier();
       virtual void setLevel(int _level);
       int getGlobalIdentity(const G4VPhysicalVolume*,const G4VPhysicalVolume*) override;
       int getInstanceIdentity(const G4VPhysicalVolume* ) const override ;

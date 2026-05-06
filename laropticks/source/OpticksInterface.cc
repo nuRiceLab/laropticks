@@ -265,6 +265,10 @@ namespace laropticks{
 	    GDMLPath = fGeom->GDMLFile();
         // Initialize root file (For Testing Purposes)
 	    initFileManager();
+
+
+	    // Note: ftracks and fDynamicParticles are reserved in initTracks() with exact size
+
         OpticksSensorIdentifier=nullptr;
 		OpticksHits=nullptr;
 		DetectorIds={};
@@ -327,9 +331,13 @@ namespace laropticks{
 
 		int tempTrackID=-1;
 
+		  // Pre-allocate vector capacity to avoid repeated allocations during event processing
+	    // Prevents O(n log n) behavior with dynamic vector resizing
+	    fTouchableHistories.reserve(edeps.size());
+	    fstepPoints.reserve(2*edeps.size());  // 2x since we store preStep + postStep
 
         for (auto const& edepi : edeps) {
-            if (!(num_points % 10000))
+            if (!(num_points % 100000))
 			{
 
 			   mf::LogInfo ("OpticksInterface") <<" Opticks "
@@ -410,6 +418,16 @@ namespace laropticks{
 		ReleaseMemory(ftracks,"Tracks");
 		ReleaseMemory(fTouchableHistories,"TouchableHistories");
 
+		// Clean up OpticksSensorIdentifier to prevent singleton leak
+		if(OpticksSensorIdentifier != nullptr) {
+			delete OpticksSensorIdentifier;
+			OpticksSensorIdentifier = nullptr;
+			mf::LogInfo("OpticksInterface") << "Cleaned up OpticksSensorIdentifier" << std::endl;
+		}
+  	  // Clean up singleton instances to prevent memory leaks
+      GPUPrimaryPhoton::deleteInstance();
+	  OpticksHitHandler::deleteInstance();
+
     }
 
 
@@ -430,7 +448,7 @@ namespace laropticks{
             analysisManager->initPhotonGenTree();
             // Estimating Visibilities for comparison with LightSource Module
             analysisManager->initVoxelTree();
-		}else setSavePhotons(false);
+		}
 
 }
 	void OpticksInterface::initTracks(){
@@ -439,6 +457,10 @@ namespace laropticks{
 		 mf::LogInfo ("OpticksInterface") << "Amount of Particles " << fParticleList->size()<< std::endl; ;
 
 		Trackmps = new std::map<int, G4Track*>();
+		// Pre-allocate vectors to avoid repeated allocations
+		ftracks.reserve(fParticleList->size());
+		fDynamicParticles.reserve(fParticleList->size());
+
 		for (size_t ip=0; ip<fParticleList->size(); ip++){
 			auto mp = fParticleList->at(ip);
 		    G4ParticleDefinition* pdef = G4ParticleTable::GetParticleTable()->FindParticle(mp.PdgCode());
