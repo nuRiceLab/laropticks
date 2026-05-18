@@ -4,7 +4,7 @@
 - **CUDA Toolkit 13 Update 2 (Tested)**
 - **NVIDIA GPU with OptiX support (9) (Tested)**
 - **Geant4 (with GDML support enabled)**
-- **Opticks**
+- **[Opticks](https://github.com/nuRiceLab/RiceOpticks)**
 - **ROOT (for hit testing)**
 
 ---
