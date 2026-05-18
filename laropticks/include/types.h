@@ -46,7 +46,19 @@ namespace laropticks {
         double wavelength;
         double energy;
     };
+
+
+       struct SimEdeps{
+        int evtID;
+        int TrackID;
+        int PDG;
+        double x;
+        double y;
+        double z;
+        double t;
+        int nphot;
+        int nelect;
+    };
 }
-
-
 #endif //LAROPTICKS_TYPES_HH
+

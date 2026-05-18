@@ -117,6 +117,21 @@ namespace laropticks {
          fPhotonGenBranch.energy=energy;
          fPhotonGenTTree->Fill();
     }
+
+
+        void AnalysisManagerHelper::FillEdepTree(int &evtid, G4LorentzVector &pos, int trkid, int pdg, int nphot, int nelect)
+    {
+         fSimEdepsGenBranch.evtID=evtid;
+         fSimEdepsGenBranch.x=pos.x();
+         fSimEdepsGenBranch.y=pos.y();
+         fSimEdepsGenBranch.z=pos.z();
+         fSimEdepsGenBranch.t=pos.t();
+         fSimEdepsGenBranch.TrackID=trkid;
+         fSimEdepsGenBranch.nphot=nphot;
+         fSimEdepsGenBranch.PDG=pdg;
+         fSimEdepsGenBranch.nelect=nelect;
+         fSimEdepGenTTree->Fill();
+    }
     void AnalysisManagerHelper::FillHitTree(laropticks::OpticksHit &hit){
         fOpticksHitBranch=hit;
         fOpticksHitTTree->Fill();
@@ -170,5 +185,19 @@ namespace laropticks {
 		fPhotonGenTTree->Branch("wavelength", &fPhotonGenBranch.wavelength, "wavelength/D");
 		fPhotonGenTTree->Branch("energy", &fPhotonGenBranch.energy, "energy/D");
     }
+
+    void AnalysisManagerHelper::initIonAndScintGenTree(){
+        fSimEdepGenTTree = fTFileService->make<TTree>("SimEnergyDeposit", "IonAndScint Info Saved");
+        fSimEdepGenTTree->Branch("evtID", &fSimEdepsGenBranch.evtID, "evtID/I");
+		fSimEdepGenTTree->Branch("TrackID", &fSimEdepsGenBranch.TrackID, "TrackID/I");
+		fSimEdepGenTTree->Branch("PDG", &fSimEdepsGenBranch.PDG, "PDG/I");
+		fSimEdepGenTTree->Branch("x", &fSimEdepsGenBranch.x, "x/D");
+		fSimEdepGenTTree->Branch("y", &fSimEdepsGenBranch.y, "y/D");
+		fSimEdepGenTTree->Branch("z", &fSimEdepsGenBranch.z, "z/D");
+		fSimEdepGenTTree->Branch("t", &fSimEdepsGenBranch.t, "t/D");
+        fSimEdepGenTTree->Branch("nphot", &fSimEdepsGenBranch.nphot, "nphot/I");
+        fSimEdepGenTTree->Branch("nelect", &fSimEdepsGenBranch.nelect, "nelect/I");
+
+	 }
 
 }

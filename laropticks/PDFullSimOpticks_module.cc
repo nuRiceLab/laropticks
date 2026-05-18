@@ -110,6 +110,7 @@ namespace laropticks {
 
     // Initialize OpDetBacktrackerRecord
     produces<std::vector<sim::OpDetBacktrackerRecord>>();
+
 	std::cout << "PDFullSimOpticks constructed with SimulationLabel: " << fSimTag.label() << std::endl;
     // Initialize Opticks
     opticks=OpticksInterface::GetInstance();
@@ -152,7 +153,10 @@ namespace laropticks {
     }
 
 	// Copy the results
-	if (result) event.put(std::move(result));
+	if (result)
+	{
+		event.put(std::move(result)); // Move OpDetBacktrackerRecord
+	}
 	else mf::LogTrace("PDFullSimOpticks") <<"BackTracker Results Empty!" << std::endl;
   }
 

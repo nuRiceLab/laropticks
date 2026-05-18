@@ -269,7 +269,7 @@
    <fraction n="0.019" ref="beryllium"/>
   </material>
 
-  <material name="LAr" formula="LAr">
+<material name="LAr" formula="LAr">
    <D value="1.40" unit="g/cm3"/>
    <fraction n="1.0000" ref="argon"/>
    <property name="RINDEX" ref="RINDEXLAR"/>
@@ -287,7 +287,10 @@
    <property name="SCINTILLATIONCOMPONENT2" ref="SCINTLAR"/>
    <property name="SCINTILLATIONYIELD1" ref="YR"/>
    <property name="SCINTILLATIONYIELD2" ref="YR2"/>
+   <property name="RAYLEIGH" ref="RAYLEIGHLAR"/>
+   <property name="ABSLENGTH" ref="ABSLENGTHLAR"/>
 </material>
+
 <material name="ArapucaWindowProperties">
      <D value="2.74351" unit="g/cm3"/>
      <fraction n="0.600" ref="SiO2"/>

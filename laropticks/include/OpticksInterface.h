@@ -121,12 +121,12 @@ class OpticksHitHandler;
       void setFileService(art::TFileService * fs);
 	  std::string GetSimTag();
  	  bool IsSavePhotons();
-
 	  //simb::MCParticle * FindParticle(int TrackID);
 	  // Finalize execution
 	  void endJob();
       template <typename T>
       void ReleaseMemory(std::vector<T*> &vec, const std::string& msg) {
+      	     if (vec.empty()) return;
 			 std::cout << "ReleasingMemory for " <<msg << std::endl;
              for (T* ptr : vec) delete ptr;
 			 vec.clear();
@@ -160,7 +160,8 @@ class OpticksHitHandler;
 	  std::string ftag;
 	  bool fph_save;
       art::TFileService *fTFileService;
-  };
+      AnalysisManagerHelper  *analysisManager;
+   };
      inline void OpticksInterface::setFileService(art::TFileService * fs){
       fTFileService=fs;
   }

@@ -2,7 +2,6 @@
 // LArSoft related
 #include "laropticks/include/OpticksInterface.h"
 
-
 using namespace xercesc;
 
 namespace laropticks{
@@ -12,7 +11,7 @@ namespace laropticks{
   void OpticksInterface::init(){
 	  if(World) return; // return if world exist since no need to re-initilize
   	  // Initialize Opticks Logs for Information and Debugging
-	   mf::LogInfo ("OpticksInterface") << "--- Initiation OpticksInterface ----" << std::endl;
+  	  mf::LogInfo ("OpticksInterface") << "--- Initiation OpticksInterface ----" << std::endl;
 	  mf::LogTrace("OpticksInterface::init") << "Initializing OpticksInterface";
 
 	  // mf::LogInfo ("OpticksInterface) << "Number of Detectors " << fGeom.NAuxDets() ;
@@ -100,8 +99,8 @@ namespace laropticks{
 
       int CollectedPhotons=SEvt::GetNumPhotonCollected(0);
       int maxPhoton=SEventConfig::MaxPhoton();
-      // Simulate in batch
 
+      // Simulate in batch
       if(CollectedPhotons>=maxPhoton) {
 		 mf::LogInfo ("OpticksInterface") << "Simulating in Batch Mode ...." << std::endl;
 			Simulate();
@@ -121,8 +120,10 @@ namespace laropticks{
 
 	  g4xc->simulate(eventID,0);
       cudaDeviceSynchronize();
-      if(SEvt::GetNumHit(0)>0){
+  	  int hit_count = SEvt::GetNumHit(0);
+      if(hit_count>0){
           OpticksHits->CollectHits(eventID,obtrHelpers);
+      	  mf::LogInfo ("OpticksInterface") << "OpticksInterface::Simulate: "<< hit_count << " Hits" << std::endl;
       }else  mf::LogInfo ("OpticksInterface") << "OpticksInterface::Simulate: No Hits" << std::endl;
 	  //Event id needed here
       g4xc->reset(eventID);
@@ -236,12 +237,12 @@ namespace laropticks{
   				{
   					// mf::LogInfo ("OpticksInterface) << "Attaching sensitive detector " << value << " to volume " << volName+"_PV" << std::endl ;
   					obtrHelpers.emplace(sid,sid);
+
   					DetectorIds.insert(std::pair<G4String,G4int>(volName+"_PV",sid++));
   				}
   			} // nested loop
   		}	// first loop
 	} //else
-
 
 
  }
@@ -294,10 +295,14 @@ namespace laropticks{
         if(obtrHelpers.size()>0){
 		for (auto& opbtr: obtrHelpers)
 			records->emplace_back(opbtr.second);
+        	//std::cout < opbtr.second.OpDetNum() << " " << opbtr.second.timePDclockSDPsMap().size() << std::endl;
 		} else  mf::LogInfo ("OpticksInterface") << "obtrHelper seems empty ...." << std::endl;
 		PhotonGen->reset();
 		return records;
 	}
+
+
+
 	//-------------------------------------------------------------------------//
 	/*!
 	* Simulate scintilation photons per art Event \c art::Event .
@@ -320,23 +325,27 @@ namespace laropticks{
         int num_slowdp = 0;
 
 
+
         mf::LogTrace("OpticksInterface::executeEvent")<< "Edep size " << edeps.size() << "\n";
 
-  	    int nphot;
+  	    int nphot=0;
   		double edeposit;
 
 		// Get The Parent Information
 		 mf::LogInfo ("OpticksInterface") << " Size of Energy Depositions " <<  edeps.size() ;
 		G4Track * aTrack=nullptr;
 
-		int tempTrackID=-1;
-
+		int tempTrackID=-99999;
+		int edepTrackID=0;
 		  // Pre-allocate vector capacity to avoid repeated allocations during event processing
 	    // Prevents O(n log n) behavior with dynamic vector resizing
 	    fTouchableHistories.reserve(edeps.size());
 	    fstepPoints.reserve(2*edeps.size());  // 2x since we store preStep + postStep
-
+		double photonE=0;
         for (auto const& edepi : edeps) {
+        	num_points++;
+        	nphot = nphot + edepi.NumPhotons();
+
             if (!(num_points % 100000))
 			{
 
@@ -349,39 +358,49 @@ namespace laropticks{
 
 
             }
-			if (tempTrackID != std::abs(edepi.TrackID())){ // Adding abs function to combine daughter tracks to parent since daughter tracks have negative ids
-				tempTrackID = std::abs(edepi.TrackID());
-				auto it = Trackmps->find(tempTrackID );
+        	edepTrackID=edepi.TrackID();
+        	//if (edepTrackID<0) edepTrackID=edepi.TrackID()+fParticleList->size();
+
+			if (tempTrackID != edepTrackID){
+				tempTrackID = edepTrackID;
+				auto it = Trackmps->find(std::abs(tempTrackID) );
 				if (it != Trackmps->end()){
 					aTrack = it->second;
-					// mf::LogInfo ("OpticksInterface) << "TempTrack_ID " << tempTrackID << " Track_ID " <<edepi.TrackID() ;
+					 //mf::LogInfo ("OpticksInterface") << "TempTrack_ID " << tempTrackID << " pdg " <<edepi.PdgCode();
 				}
 				else {
-					 mf::LogInfo ("OpticksInterface::executeEvent")<<" No Track Found for TrkID " << tempTrackID <<std::endl;
+					 mf::LogInfo ("OpticksInterface::executeEvent")<<" No Track Found for TrkID " << tempTrackID << " PDG "  << edepi.PdgCode()<<std::endl;
 					continue;
 				}
 			}
+        	if (IsSavePhotons())
+        	{
+        		G4LorentzVector ffpos = {edepi.StartX(),edepi.StartY(),edepi.StartZ()};
+				analysisManager->FillEdepTree (eventID, ffpos, edepi.TrackID(), edepi.PdgCode(), edepi.NumPhotons(),  edepi.NumElectrons());
+        	}
 			CollectPhotons(aTrack,edepi);
 
-            num_points++;
 
-			nphot=edepi.NumPhotons();
 
-        	edeposit = edeposit + edepi.Energy();
-			nphot+=edepi.NumSPhotons();
-        	num_fastph +=edepi.NumFPhotons();
-        	num_slowph +=edepi.NumSPhotons();
+        	//edeposit = edeposit + edepi.Energy();
+        	//num_fastph +=edepi.NumFPhotons();
+        	//num_slowph +=edepi.NumSPhotons();
 
-		    mf::LogTrace("OpticksInterface:executeEvent")
+		    /*mf::LogTrace("OpticksInterface:executeEvent")
 		    << "Total points: " << num_points << ", total fast photons: " << num_fastph
 		    << ", total slow photons: " << num_slowph << "\ndetected fast photons: " << num_fastdp
-		    << ", detected slow photons: " << num_slowdp;
+		    << ", detected slow photons: " << num_slowdp;*/
 		}
 
 		Simulate();
 		if(obtrHelpers.size()>0){
+
 			for (auto& opbtr: obtrHelpers)
+			{
 				records->emplace_back(opbtr.second);
+				opbtr.second = sim::OBTRHelper(opbtr.first);	// Reinitilaze the obtrs
+			}
+
 
 		} else  mf::LogInfo ("OpticksInterface") << "obtrHelper seems empty ...." << std::endl;
 
@@ -390,7 +409,21 @@ namespace laropticks{
 		delete Trackmps;
 		Trackmps=nullptr;
 
-		return records ;
+  		// Release memory
+  		ReleaseMemory(fstepPoints,"StepPoints");
+  		ReleaseMemory(ftracks,"Tracks");
+  		ReleaseMemory(fTouchableHistories,"TouchableHistories");
+
+  		mf::LogInfo ("OpticksInterface::executeEvent")<<" Total Photons " << nphot  <<std::endl;
+		/*std::cout << " Printing the backtracker records for primary photons " << std::endl;
+  	    for (auto &btr : *records.get()) {
+    	  for (auto const& [tick, sdps] : btr.timePDclockSDPsMap()) {
+        	    std::cout << "opDet=" << btr.OpDetNum()
+                  << " tick=" << tick          // should be ~O(1000) ns, not 0
+                  << " nSDPs=" << sdps.size() << "\n";
+    	  }
+	   }*/
+  		return records ;
 	}
 
 	//-------------------------------------------------------------------------//
@@ -402,13 +435,9 @@ namespace laropticks{
   		 mf::LogInfo ("OpticksInterface") << "OpticksInterface::endJob" << std::endl;
 
 		mf::LogTrace("OpticksInterface::endJob") << "Finalizing the job process for Opticks";
-  		// Write and Close File
-  		auto analysisManager = AnalysisManagerHelper::getInstance();
-  		/*if (analysisManager){
-  			 mf::LogInfo ("OpticksInterface) << "Saving Events to " << analysisManager->GetFileName() <<" root file .." << std::endl;
-  			analysisManager->Write();
-  			analysisManager->CloseFile();
-  		}*/
+
+
+
   	    XMLPlatformUtils::Terminate();
 
 		// Release memory
@@ -434,7 +463,7 @@ namespace laropticks{
 	void OpticksInterface::initFileManager() {
     	// Get the analysis manager
 
-     	AnalysisManagerHelper* analysisManager = AnalysisManagerHelper::getInstance();
+     	analysisManager = AnalysisManagerHelper::getInstance();
 	    analysisManager->setFileService(fTFileService);
 
 
@@ -449,6 +478,10 @@ namespace laropticks{
             // Estimating Visibilities for comparison with LightSource Module
             analysisManager->initVoxelTree();
 		}
+  		else if (IsSavePhotons() && GetSimTag()=="IonAndScint" )
+  		{
+  			analysisManager->initIonAndScintGenTree(); // Save edep info
+  		}
 
 }
 	void OpticksInterface::initTracks(){
@@ -458,9 +491,9 @@ namespace laropticks{
 
 		Trackmps = new std::map<int, G4Track*>();
 		// Pre-allocate vectors to avoid repeated allocations
-		ftracks.reserve(fParticleList->size());
-		fDynamicParticles.reserve(fParticleList->size());
-
+		ftracks.reserve(ftracks.size()+fParticleList->size());
+		fDynamicParticles.reserve(fDynamicParticles.size()+fParticleList->size());
+		int MotherID=0;
 		for (size_t ip=0; ip<fParticleList->size(); ip++){
 			auto mp = fParticleList->at(ip);
 		    G4ParticleDefinition* pdef = G4ParticleTable::GetParticleTable()->FindParticle(mp.PdgCode());
@@ -468,14 +501,17 @@ namespace laropticks{
 			G4DynamicParticle * DParticle= new G4DynamicParticle(pdef,G4ThreeVector(mp.Px(0)*GeV,mp.Py(0)*GeV,mp.Pz(0)*GeV),mp.E(0)*GeV);
 			auto trk =new G4Track(DParticle,mp.T()*ns,G4ThreeVector(mp.Vx(0)*cm,mp.Vy(0)*cm,mp.Vz(0)*cm));
 			trackID=mp.TrackId();
+			//if (trackID<0) trackID=mp.TrackId()+fParticleList->size(); // G4 accepts positive tracks, so shift them
 			trk->SetTrackID(trackID);
-			trk->SetParentID(mp.Mother());
+			MotherID=mp.Mother();
+			//if (MotherID<0) MotherID=mp.Mother()+fParticleList->size(); // G4 accepts positive tracks, so shift them
+			trk->SetParentID(MotherID);
   			G4TrackStatus status = static_cast<G4TrackStatus>(mp.StatusCode());
 			trk->SetTrackStatus(status);
 			ftracks.push_back(trk);
 			fDynamicParticles.push_back(DParticle);
-			Trackmps->insert( std::make_pair(mp.TrackId(), trk) );
-			// mf::LogInfo ("OpticksInterface) << "TrackID " << trackID << " Pdgcode " << mp.PdgCode() << " parentID " << mp.Mother();
+			Trackmps->insert( std::make_pair(trackID, trk) );
+			//std::cout << "OpticksInterface " << "trackID " << trackID << " pdg "<< mp.PdgCode() << " parentID " << mp.Mother() << std::endl;
 		}
 	}
 	void OpticksInterface::createG4SkinSurface(std::string VolName, G4OpticalSurface* surface){

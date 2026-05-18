@@ -77,12 +77,14 @@ class AnalysisManagerHelper
         void initVoxelTree();
         void initOpticksHitTree();
         void initPhotonGenTree();
+        void initIonAndScintGenTree();
         void setFileService(art::TFileService * fs);
 
 
         void FillHitTree(laropticks::OpticksHit &hit);
         void FillVoxelTree(laropticks::Visibility &vis);
         void FillPhotonGenTree(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy);
+        void FillEdepTree(int &evtid, G4LorentzVector &pos, int trkid, int pdg, int nphot, int nelect);
         ~AnalysisManagerHelper();
     private:
         AnalysisManagerHelper(){};
@@ -99,9 +101,11 @@ class AnalysisManagerHelper
         TTree * fVisTTree;
         TTree * fPhotonGenTTree;
         TTree * fOpticksHitTTree;
+        TTree * fSimEdepGenTTree;
         laropticks::Visibility fVisibilityBranch;
         laropticks::OpticksHit fOpticksHitBranch;
         laropticks::PhotonGen fPhotonGenBranch;
+        laropticks::SimEdeps fSimEdepsGenBranch;
         art::TFileService *fTFileService;
 
   };

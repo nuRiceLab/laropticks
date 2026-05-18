@@ -29,7 +29,7 @@
 #include "G4AutoLock.hh"
 #include "G4ThreeVector.hh"
 #include "G4RunManager.hh"
-
+#include "G4SystemOfUnits.hh"
 // Cetlib
 #include "cetlib_except/exception.h"
 
@@ -58,7 +58,7 @@ namespace laropticks {
             }
         };
 
-        void CollectHits(int eventID,std::map<int, sim::OBTRHelper> obtrHelpers);
+        void CollectHits(int eventID,std::map<int, sim::OBTRHelper> &obtrHelpers);
 
         void AddHits();
         void SaveHits();
