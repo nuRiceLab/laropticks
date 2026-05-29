@@ -255,7 +255,7 @@ namespace laropticks{
 	void OpticksInterface::beginJob()
 	{
         mf::LogTrace("OpticksInterface::beginJob") << " Opticks Initialization";
-		 mf::LogInfo ("OpticksInterface") << "Begin Job" << std::endl;
+		 //mf::LogInfo ("OpticksInterface") << "Begin Job" << std::endl;
         // Initialize the variables
 
 		// initialize the parser
@@ -310,9 +310,9 @@ namespace laropticks{
     OpticksInterface::UPVecBTR OpticksInterface::executeEvent(VecSED const& edeps)
     {
 		if(Trackmps==nullptr) initTracks();
-		 mf::LogInfo ("OpticksInterface") << "OpticksInterface::executeEvent" << std::endl;
+		//mf::LogInfo ("OpticksInterface") << "OpticksInterface::executeEvent" << std::endl;
 
-        mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
+        //mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
 		// Optical Back Tracker
 
 
@@ -468,7 +468,11 @@ namespace laropticks{
 
 
 	    //Opticks Hits
-        analysisManager->initOpticksHitTree();
+  		if (IsSavePhotons())
+  		{
+  			analysisManager->initOpticksHitTree();
+  		}
+
 
 
 		//Initial Particle Info
@@ -485,9 +489,9 @@ namespace laropticks{
 
 }
 	void OpticksInterface::initTracks(){
-		 mf::LogInfo ("OpticksInterface") << "OpticksInterface::initTracks" << std::endl;
-		 mf::LogInfo ("OpticksInterface") << "Setting up Tracks" << std::endl;
-		 mf::LogInfo ("OpticksInterface") << "Amount of Particles " << fParticleList->size()<< std::endl; ;
+		 //mf::LogInfo ("OpticksInterface") << "OpticksInterface::initTracks" << std::endl;
+		 //mf::LogInfo ("OpticksInterface") << "Setting up Tracks" << std::endl;
+		 //mf::LogInfo ("OpticksInterface") << "Amount of Particles " << fParticleList->size()<< std::endl; ;
 
 		Trackmps = new std::map<int, G4Track*>();
 		// Pre-allocate vectors to avoid repeated allocations

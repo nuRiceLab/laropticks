@@ -67,6 +67,7 @@ namespace laropticks {
         void AddPhotons(int value);
         void initSensorCounts(std::map<G4String, G4int>  &DetectorIds);
 		void setVoxelID(int &id);
+
     private:
         OpticksHitHandler(){};
         ~OpticksHitHandler();
@@ -79,6 +80,7 @@ namespace laropticks {
         int PhotonCount=0;
         std::map<int,int> fSensorCounts;
 		int fVoxelID=0;
+
   };
 
   inline void OpticksHitHandler::AddPhotons(int value)

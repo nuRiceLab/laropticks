@@ -97,9 +97,9 @@ services.PhotonVisibilityService: {
   UseAutomaticVoxels: false
   UseCryoBoundary:  false
   ReflectOverZeroX: false
-  NX:  100  # 17 voxels along X direction
-  NY:  100  # 17 voxels along Y direction
-  NZ:  100  # 17 voxels along Z direction
+  NX:  17  # 17 voxels along X direction
+  NY:  17  # 17 voxels along Y direction
+  NZ:  17  # 17 voxels along Z direction
 
   XMin: -360
   XMax: 360
@@ -121,7 +121,7 @@ services.LArPropertiesService.ScintPreScale: 1.0
 source:
 {
   module_type: EmptyEvent
-  maxEvents:   1000000           # Number of events to create
+  maxEvents:   4913           # Number of events to create
   firstRun:    1           # Run number to use for this file
   firstEvent:  1           # number of first event in the file
 }

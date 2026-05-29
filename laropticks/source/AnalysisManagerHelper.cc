@@ -64,6 +64,7 @@ namespace laropticks {
         OpticksScintPhotons=0;
         G4CerenkovPhotons=0;
         G4ScintPhotons=0;
+
     }
     void AnalysisManagerHelper::SavePhotonInfotoFile()
     {

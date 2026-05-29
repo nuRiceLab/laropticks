@@ -42,6 +42,7 @@ class AnalysisManagerHelper
             if(instance== nullptr)
             {
                 instance = new AnalysisManagerHelper();
+
             }
             return instance;
         }
@@ -80,14 +81,20 @@ class AnalysisManagerHelper
         void initIonAndScintGenTree();
         void setFileService(art::TFileService * fs);
 
-
+        TTree * getOpticksHitTree();
         void FillHitTree(laropticks::OpticksHit &hit);
         void FillVoxelTree(laropticks::Visibility &vis);
         void FillPhotonGenTree(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy);
         void FillEdepTree(int &evtid, G4LorentzVector &pos, int trkid, int pdg, int nphot, int nelect);
         ~AnalysisManagerHelper();
     private:
-        AnalysisManagerHelper(){};
+        AnalysisManagerHelper()
+        {
+             TTree * fVisTTree=nullptr;
+             TTree * fPhotonGenTTree=nullptr;
+             TTree * fOpticksHitTTree=nullptr;
+             TTree * fSimEdepGenTTree=nullptr;
+        };
 
         static G4Mutex mtx;
         static AnalysisManagerHelper* instance;
@@ -107,11 +114,14 @@ class AnalysisManagerHelper
         laropticks::PhotonGen fPhotonGenBranch;
         laropticks::SimEdeps fSimEdepsGenBranch;
         art::TFileService *fTFileService;
-
   };
     inline void AnalysisManagerHelper::setFileService(art::TFileService * fs){
         fTFileService=fs;
     }
+     inline TTree * AnalysisManagerHelper::getOpticksHitTree(){
+        return fOpticksHitTTree;
+    }
+
 
 }
 #endif //GDMLOPTICKS_ANALYSISMANAGERHELPER_HH
