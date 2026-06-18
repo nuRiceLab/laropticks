@@ -68,7 +68,9 @@ outputs:
  }
 }
 
-services.Geometry.GDML: "dune10kt_v6_refactored_nowires.gdml"
+services.Geometry.GDML: "dune10kt_v6_refactored.gdml"
+services.AuxDetGeometry.GDML: @local::services.Geometry.GDML
+services.LArG4Detector.gdmlFileName_ : @local::services.Geometry.GDML
 physics.producers.generator: @local::dunefd_10kt_genie_nu_lbnf_dk2nu
 physics.producers.generator.GenFlavors: [14]
 physics.producers.generator.EventGeneratorList: "CC"
