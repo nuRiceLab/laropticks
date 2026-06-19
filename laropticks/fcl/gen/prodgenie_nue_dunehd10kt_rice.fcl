@@ -72,6 +72,7 @@ services.Geometry.GDML: "dune10kt_v6_refactored.gdml"
 services.AuxDetGeometry.GDML: @local::services.Geometry.GDML
 services.LArG4Detector.gdmlFileName_ : @local::services.Geometry.GDML
 physics.producers.generator: @local::dunefd_10kt_genie_nu_lbnf_dk2nu
+physics.producers.generator.MixerConfig:     "map 12:16 -12:-16 14:12 -14:-12" #swap electron neutrinos with muon neutrinos
 physics.producers.generator.GenFlavors: [12]
 physics.producers.generator.EventGeneratorList: "CC"
 
