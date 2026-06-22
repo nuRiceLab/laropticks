@@ -50,7 +50,12 @@
 #include "G4LogicalBorderSurface.hh"
 #include "G4VPhysicalVolume.hh"
 #include "G4Material.hh"
+#include "G4Version.hh"
+#if G4VERSION_NUMBER < 1100
 #include "g4root.hh"
+#else
+#include "G4AnalysisManager.hh"
+#endif
 #include "G4TransportationManager.hh"
 #include "G4DynamicParticle.hh"
 #include "G4ParticleTable.hh"
@@ -104,6 +109,8 @@ class OpticksHitHandler;
       void Simulate();
 	  void createG4SkinSurface(std::string VolName, G4OpticalSurface* surface);
 	  void createG4BorderSurface(G4VPhysicalVolume *phyv1, std::string v2, G4OpticalSurface* surface);
+
+
 	  std::string GetVolumeName(const std::string& s);
       UPVecBTR executeEvent(VecSED const& edeps); // Simulating photons produced by scintilation events
       UPVecBTR executeEvent( int VoxelID); // This is for producing visibilities with primary photons
@@ -119,11 +126,13 @@ class OpticksHitHandler;
  	  void setSimTag(std::string tag);
  	  void setSavePhotons(bool ph_save);
       void setFileService(art::TFileService * fs);
+      void setDuration(double dr);
 	  std::string GetSimTag();
  	  bool IsSavePhotons();
 	  //simb::MCParticle * FindParticle(int TrackID);
 	  // Finalize execution
 	  void endJob();
+
       template <typename T>
       void ReleaseMemory(std::vector<T*> &vec, const std::string& msg) {
       	     if (vec.empty()) return;
@@ -136,6 +145,7 @@ class OpticksHitHandler;
 	  private:
     	// Construct with fcl parameters
       OpticksInterface(){};
+
       std::string GDMLPath;
       MySensorIdentifier * OpticksSensorIdentifier;
       OpticksHitHandler* OpticksHits;
@@ -143,13 +153,16 @@ class OpticksHitHandler;
 	  std::vector<simb::MCParticle> const * fParticleList ;
       std::unordered_map<int, const simb::MCParticle> fParticleMap;
 	  //std::vector<G4Step*> fsteps;
+
 	  std::vector<G4StepPoint*> fstepPoints ;
 	  std::vector<G4Track*> ftracks;
 	  std::vector<G4TouchableHistory*> fTouchableHistories;
 	  std::vector<G4DynamicParticle*> fDynamicParticles;
 	  G4VPhysicalVolume* World =nullptr;
+
 	  int trackID;
 	  int eventID;
+
 	  geo::GeometryCore const* fGeom;
 	  std::map<int,G4Track*> *Trackmps;
 	  std::map<int, sim::OBTRHelper> obtrHelpers;
@@ -160,7 +173,10 @@ class OpticksHitHandler;
 	  std::string ftag;
 	  bool fph_save;
       art::TFileService *fTFileService;
+
       AnalysisManagerHelper  *analysisManager;
+
+      PerformanceTime *pt;
    };
      inline void OpticksInterface::setFileService(art::TFileService * fs){
       fTFileService=fs;

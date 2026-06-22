@@ -18,7 +18,12 @@
 #include "G4AutoLock.hh"
 #include "G4ThreeVector.hh"
 #include "G4LorentzVector.hh"
+#include "G4Version.hh"
+#if G4VERSION_NUMBER < 1100
 #include "g4root.hh"
+#else
+#include "G4AnalysisManager.hh"
+#endif
 #include "sphoton.h"
 
 // ROOT
@@ -56,17 +61,11 @@ class AnalysisManagerHelper
             }
         }
 
-        G4int GetG4ScintPhotons();
-        G4int GetOpticksScintPhotons();
-        G4int GetG4CerenkovPhotons();
-        G4int GetOpticksCerenkovPhotons();
-        G4int GetDuration();
+        G4int GetNumPhotons();
+        G4double GetDuration();
         std::map<G4String,G4int> * GetDetectIds();
 
-        void AddG4ScintPhotons(G4int ph);
-        void AddOpticksScintPhotons(G4int ph);
-        void AddG4CerenkovPhotons(G4int ph);
-        void AddOpticksCerenkovPhotons(G4int ph);
+        void AddNumPhotons(G4int ph);
         void SetDuration(G4double dr);
         void SavePhotonInfotoFile();
         void SaveG4HitsToFile();
@@ -78,12 +77,14 @@ class AnalysisManagerHelper
         void initVoxelTree();
         void initOpticksHitTree();
         void initPhotonGenTree();
+        void initPerformanceTimeTree();
         void initIonAndScintGenTree();
         void setFileService(art::TFileService * fs);
 
         TTree * getOpticksHitTree();
-        void FillHitTree(laropticks::OpticksHit &hit);
-        void FillVoxelTree(laropticks::Visibility &vis);
+        void FillHitTree(OpticksHit &hit);
+        void FillVoxelTree(Visibility &vis);
+        void FillPerformanceTree(PerformanceTime *per);
         void FillPhotonGenTree(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy);
         void FillEdepTree(int &evtid, G4LorentzVector &pos, int trkid, int pdg, int nphot, int nelect);
         ~AnalysisManagerHelper();
@@ -94,14 +95,12 @@ class AnalysisManagerHelper
              TTree * fPhotonGenTTree=nullptr;
              TTree * fOpticksHitTTree=nullptr;
              TTree * fSimEdepGenTTree=nullptr;
+             TTree * fPerformanceTimeTTree=nullptr;
         };
 
         static G4Mutex mtx;
         static AnalysisManagerHelper* instance;
-        G4int G4CerenkovPhotons{0};
-        G4int OpticksCerenkovPhotons{0};
-        G4int G4ScintPhotons{0};
-        G4int OpticksScintPhotons{0};
+        G4int fAmountPhotons{0};
         G4double Duration{0};
         std::map<G4String,G4int> * fDetectIds{nullptr};
 
@@ -109,12 +108,17 @@ class AnalysisManagerHelper
         TTree * fPhotonGenTTree;
         TTree * fOpticksHitTTree;
         TTree * fSimEdepGenTTree;
-        laropticks::Visibility fVisibilityBranch;
-        laropticks::OpticksHit fOpticksHitBranch;
-        laropticks::PhotonGen fPhotonGenBranch;
-        laropticks::SimEdeps fSimEdepsGenBranch;
+        TTree * fPerformanceTimeTTree;
+
+        Visibility fVisibilityBranch;
+        OpticksHit fOpticksHitBranch;
+        PhotonGen fPhotonGenBranch;
+        SimEdeps fSimEdepsGenBranch;
+        PerformanceTime fPerformanceTimeBranch;
+
         art::TFileService *fTFileService;
   };
+
     inline void AnalysisManagerHelper::setFileService(art::TFileService * fs){
         fTFileService=fs;
     }

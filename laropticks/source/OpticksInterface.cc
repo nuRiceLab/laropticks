@@ -1,6 +1,9 @@
 
 // LArSoft related
+#include "G4Version.hh"
 #include "laropticks/include/OpticksInterface.h"
+#include "laropticks/include/AnalysisManagerHelper.h"
+#include "laropticks/include/types.h"
 
 using namespace xercesc;
 
@@ -93,11 +96,18 @@ namespace laropticks{
 	  postStep->SetVelocity(endPoint.mag()/(edep.EndT()*ns));
 
       mf::LogTrace("OpticksInterface::CollectPhotons") << "Collecting Photons";
+	  // Version 10.6.1
+  	#if G4VERSION_NUMBER < 1100
 
       U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumFPhotons(), 0, pTable->GetConstProperty(kFASTTIMECONSTANT),edep.TrackID());
       U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumSPhotons(), 1, pTable->GetConstProperty(kSLOWTIMECONSTANT),edep.TrackID());
+  	  // Version 11.2
+    #else
+  	  U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumFPhotons(), 0, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT1),edep.TrackID());
+      U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumSPhotons(), 1, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT2),edep.TrackID());
+    #endif
 
-      int CollectedPhotons=SEvt::GetNumPhotonCollected(0);
+  	  int CollectedPhotons=SEvt::GetNumPhotonCollected(0);
       int maxPhoton=SEventConfig::MaxPhoton();
 
       // Simulate in batch
@@ -269,7 +279,7 @@ namespace laropticks{
 
 
 	    // Note: ftracks and fDynamicParticles are reserved in initTracks() with exact size
-
+		pt=new PerformanceTime();
         OpticksSensorIdentifier=nullptr;
 		OpticksHits=nullptr;
 		DetectorIds={};
@@ -298,6 +308,7 @@ namespace laropticks{
         	//std::cout < opbtr.second.OpDetNum() << " " << opbtr.second.timePDclockSDPsMap().size() << std::endl;
 		} else  mf::LogInfo ("OpticksInterface") << "obtrHelper seems empty ...." << std::endl;
 		PhotonGen->reset();
+  		pt->PhotonAmount=fParticleList->size();
 		return records;
 	}
 
@@ -348,15 +359,12 @@ namespace laropticks{
 
             if (!(num_points % 100000))
 			{
-
 			   mf::LogInfo ("OpticksInterface") <<" Opticks "
                 << "SimEnergyDeposit: " << num_points << " " << edepi.TrackID() << " " << edepi.Energy()
                 << "\nStart: " << edepi.Start() << "\nEnd: " << edepi.End()
                 << "\nNF: " << edepi.NumFPhotons() << "\nNS: " << edepi.NumSPhotons()
                 << "\nSYR: " << edepi.ScintYieldRatio()
 				<< "PDG: " << edepi.PdgCode()<<"\n" ;
-
-
             }
         	edepTrackID=edepi.TrackID();
         	//if (edepTrackID<0) edepTrackID=edepi.TrackID()+fParticleList->size();
@@ -379,8 +387,6 @@ namespace laropticks{
 				analysisManager->FillEdepTree (eventID, ffpos, edepi.TrackID(), edepi.PdgCode(), edepi.NumPhotons(),  edepi.NumElectrons());
         	}
 			CollectPhotons(aTrack,edepi);
-
-
 
         	//edeposit = edeposit + edepi.Energy();
         	//num_fastph +=edepi.NumFPhotons();
@@ -423,6 +429,7 @@ namespace laropticks{
                   << " nSDPs=" << sdps.size() << "\n";
     	  }
 	   }*/
+  	   pt->PhotonAmount=nphot;
   		return records ;
 	}
 
@@ -456,6 +463,7 @@ namespace laropticks{
   	  // Clean up singleton instances to prevent memory leaks
       GPUPrimaryPhoton::deleteInstance();
 	  OpticksHitHandler::deleteInstance();
+  	  delete pt;
 
     }
 
@@ -473,6 +481,8 @@ namespace laropticks{
   			analysisManager->initOpticksHitTree();
   		}
 
+  	    // Performance Tree
+		analysisManager->initPerformanceTimeTree();
 
 
 		//Initial Particle Info
@@ -570,5 +580,14 @@ namespace laropticks{
 
 	bool OpticksInterface::IsSavePhotons() {
 		return fph_save;
+	}
+	void OpticksInterface::setDuration(double dr) {
+		auto ana=AnalysisManagerHelper::getInstance();
+  		if (pt)
+  		{
+  			pt->evtID=eventID;
+  		    pt->time=dr;
+  			ana->FillPerformanceTree(pt);
+  		}else {std::cout << "Performance Tree is not initialized! " << std::endl;}
 	}
 }

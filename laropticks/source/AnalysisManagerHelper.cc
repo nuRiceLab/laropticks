@@ -1,54 +1,34 @@
 
 #include "laropticks/include/AnalysisManagerHelper.h"
+
+#include "laropticks/include/types.h"
+
 namespace laropticks {
 
     // Initialize Static Member
     AnalysisManagerHelper * AnalysisManagerHelper::instance = nullptr;
     G4Mutex AnalysisManagerHelper::mtx;
 
-    G4int AnalysisManagerHelper::GetG4ScintPhotons(){
-        return G4ScintPhotons;
-    }
 
      AnalysisManagerHelper::~AnalysisManagerHelper()
     {
-
          if(fDetectIds != nullptr) {
              delete fDetectIds;
              fDetectIds = nullptr;
         }
     }
 
-    G4int AnalysisManagerHelper::GetOpticksScintPhotons(){
-        return OpticksScintPhotons;
-    }
-
-    G4int AnalysisManagerHelper::GetG4CerenkovPhotons(){
-        return G4CerenkovPhotons;
+    G4int AnalysisManagerHelper::GetNumPhotons(){
+        return fAmountPhotons;
     }
 
 
-    G4int AnalysisManagerHelper::GetOpticksCerenkovPhotons(){
-        return OpticksCerenkovPhotons;
-    }
-
-    G4int AnalysisManagerHelper::GetDuration(){
+    G4double AnalysisManagerHelper::GetDuration(){
         return Duration;
     }
 
-    void AnalysisManagerHelper::AddG4ScintPhotons(G4int ph){
-        G4ScintPhotons+=ph;
-    }
-    void AnalysisManagerHelper::AddG4CerenkovPhotons(G4int ph){
-        G4CerenkovPhotons+=ph;
-    }
-
-    void AnalysisManagerHelper::AddOpticksScintPhotons(G4int ph){
-        OpticksScintPhotons+=ph;
-    }
-
-    void AnalysisManagerHelper::AddOpticksCerenkovPhotons(G4int ph){
-        OpticksCerenkovPhotons+=ph;
+    void AnalysisManagerHelper::AddNumPhotons(G4int ph){
+        fAmountPhotons+=ph;
     }
 
     void AnalysisManagerHelper::SetDuration(G4double dr){
@@ -58,26 +38,19 @@ namespace laropticks {
     void AnalysisManagerHelper::Reset()
     {
         Duration=0;
-        G4CerenkovPhotons=0;
-        OpticksScintPhotons=0;
-        OpticksCerenkovPhotons=0;
-        OpticksScintPhotons=0;
-        G4CerenkovPhotons=0;
-        G4ScintPhotons=0;
-
+        fAmountPhotons=0;
     }
+
     void AnalysisManagerHelper::SavePhotonInfotoFile()
     {
         G4AnalysisManager * AnaMngr = G4AnalysisManager::Instance();
-        G4int eventID=0;
-        AnaMngr->FillNtupleIColumn(2,0,G4ScintPhotons);
-        AnaMngr->FillNtupleIColumn(2,1,G4CerenkovPhotons);
-        AnaMngr->FillNtupleIColumn(2,2,OpticksScintPhotons);
-        AnaMngr->FillNtupleIColumn(2,3,OpticksCerenkovPhotons);
-        AnaMngr->FillNtupleDColumn(2,4,Duration);
-        AnaMngr->FillNtupleIColumn(2,5,eventID);
-        AnaMngr->AddNtupleRow(3);
+        int id=2,fEventID=0;
+        AnaMngr->FillNtupleIColumn(id,0,fEventID);
+        AnaMngr->FillNtupleIColumn(id,1,fAmountPhotons);
+        AnaMngr->FillNtupleDColumn(id,4,Duration);
+        AnaMngr->AddNtupleRow(id);
     }
+
 
     void AnalysisManagerHelper::SaveVoxelPhotonInfotoFile(int &evtid, sphoton &sp, float &energy)
     {
@@ -100,6 +73,9 @@ namespace laropticks {
         AnaMngr->FillNtupleFColumn(id,12,energy);
         AnaMngr->AddNtupleRow(id);
     }
+
+
+
     void AnalysisManagerHelper::FillPhotonGenTree(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy)
     {
 
@@ -135,12 +111,19 @@ namespace laropticks {
     }
     void AnalysisManagerHelper::FillHitTree(laropticks::OpticksHit &hit){
         fOpticksHitBranch=hit;
-        fOpticksHitTTree->Fill();
+        if (fOpticksHitTTree!= nullptr) fOpticksHitTTree->Fill();
+        else std::cout << "Opticks Hit Tree Not Initialized ...." << std::endl;
     }
 
      void AnalysisManagerHelper::FillVoxelTree(laropticks::Visibility &vis){
         fVisibilityBranch=vis;
         fVisTTree->Fill();
+    }
+	void AnalysisManagerHelper::FillPerformanceTree(laropticks::PerformanceTime *per){
+
+        fPerformanceTimeBranch=*per;
+     	if (fPerformanceTimeTTree!= nullptr) fPerformanceTimeTTree->Fill();
+     	else std::cout << "Performance Time Tree Not Initialized ...." << std::endl;
     }
 
     void AnalysisManagerHelper::initVoxelTree(){
@@ -150,6 +133,8 @@ namespace laropticks {
 		fVisTTree->Branch("OptDetID", &fVisibilityBranch.sensorid, "OptDetID/I");
 		fVisTTree->Branch("Visibility", &fVisibilityBranch.Visibility, "Visibility/D");
     }
+
+
     void AnalysisManagerHelper::initOpticksHitTree(){
         fOpticksHitTTree = fTFileService->make<TTree>("OpticksHits", "Opticks GPU Photon Hits");
         fOpticksHitTTree->Branch("evtID", &fOpticksHitBranch.evtID, "evtID/I");
@@ -200,5 +185,13 @@ namespace laropticks {
         fSimEdepGenTTree->Branch("nelect", &fSimEdepsGenBranch.nelect, "nelect/I");
 
 	 }
+
+    void AnalysisManagerHelper::initPerformanceTimeTree(){
+			fPerformanceTimeTTree = fTFileService->make<TTree>("PerformanceTime", "Photon Performance");
+			fPerformanceTimeTTree->Branch("evtID", &fPerformanceTimeBranch.evtID, "evtID/I");
+			fPerformanceTimeTTree->Branch("PhotonAmount", &fPerformanceTimeBranch.PhotonAmount, "PhotonAmount/I");
+			fPerformanceTimeTTree->Branch("time", &fPerformanceTimeBranch.time, "time/D");
+	 }
+
 
 }

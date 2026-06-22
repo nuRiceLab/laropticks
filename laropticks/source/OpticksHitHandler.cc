@@ -1,5 +1,5 @@
 
-#include "../include/OpticksHitHandler.h"
+#include "laropticks/include/OpticksHitHandler.h"
 #include "laropticks/include/OpticksHitHandler.h"
 
 

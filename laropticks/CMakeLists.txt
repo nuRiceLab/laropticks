@@ -40,3 +40,8 @@ add_subdirectory(include)
 add_subdirectory(source)
 add_subdirectory(fcl)
 add_subdirectory(GDML)
+# Copy txt files to install directory
+set(MRB_BUILDDIR $ENV{MRB_BUILDDIR})
+file(GLOB TXTFILES "txtfiles/*.txt")
+install(FILES ${TXTFILES} DESTINATION ${MRB_BUILDDIR}/${PROJECT_NAME}/txtfiles)
+MESSAGE( "Copying txt file to  ${MRB_BUILDDIR}/${PROJECT_NAME}/txtfiles")

@@ -31,6 +31,12 @@ namespace laropticks {
         double Visibility;
     };
 
+    struct PerformanceTime{
+        int evtID;
+        int PhotonAmount;
+        double time;
+    };
+
     struct PhotonGen{
         int evtID;
         double x;
@@ -47,8 +53,7 @@ namespace laropticks {
         double energy;
     };
 
-
-       struct SimEdeps{
+    struct SimEdeps{
         int evtID;
         int TrackID;
         int PDG;

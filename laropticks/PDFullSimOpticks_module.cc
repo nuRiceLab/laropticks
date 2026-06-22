@@ -126,6 +126,8 @@ namespace laropticks {
   //......................................................................
   void PDFullSimOpticks::produce(art::Event& event)
   {
+  	 auto start = std::chrono::high_resolution_clock::now();
+
      mf::LogTrace("PDFullSimOpticks") << "PDFullSimOpticks Module Producer"
                               << "EventID: " << event.event();
 
@@ -149,7 +151,6 @@ namespace laropticks {
         double NProd;
         fPhotonVisService->RetrieveLightProd(VoxID, NProd);
 		result=opticks->executeEvent(VoxID);
-
     }
 
 	// Copy the results
@@ -158,6 +159,12 @@ namespace laropticks {
 		event.put(std::move(result)); // Move OpDetBacktrackerRecord
 	}
 	else mf::LogTrace("PDFullSimOpticks") <<"BackTracker Results Empty!" << std::endl;
+
+  	auto end = std::chrono::high_resolution_clock::now();
+    auto evtTime = std::chrono::duration<double>(end - start).count();
+	opticks->setDuration(evtTime); // Saving the event processing time for performance studies
+	//mf::LogInfo("[ PDFullSimOpticks::EndEvent ]")  << "Event ID " <<  event.event() <<" processing time: " << evtTime << " seconds" << std::endl;
+
   }
 
 } // namespace laropticks

@@ -285,8 +285,8 @@
    <property name="SCINTILLATIONTIMECONSTANT2" ref="STC"/>
    <property name="SCINTILLATIONCOMPONENT1" ref="SCINTLAR"/>
    <property name="SCINTILLATIONCOMPONENT2" ref="SCINTLAR"/>
-   <property name="SCINTILLATIONYIELD1" ref="YR"/>
-   <property name="SCINTILLATIONYIELD2" ref="YR2"/>
+   <property name="SCINTILLATIONYIELD1" ref="YR2"/>
+   <property name="SCINTILLATIONYIELD2" ref="YR"/>
    <property name="RAYLEIGH" ref="RAYLEIGHLAR"/>
    <property name="ABSLENGTH" ref="ABSLENGTHLAR"/>
 </material>
