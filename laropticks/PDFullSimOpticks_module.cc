@@ -77,6 +77,8 @@ namespace laropticks {
                                                    Comment("SimEnergyDeposit label.")};
     	fhicl::Atom<bool> SavePhotons{Name("SavePrimary"),
     									Comment("Enable or disable simulation mode.")};
+    	fhicl::Atom<bool> UseTracks{Name("UseTracks"),
+										Comment("Old way, using MCParticle list to produce tracks.")};
     };
 
 
@@ -92,6 +94,7 @@ namespace laropticks {
 	const art::InputTag fSimTag;
     OpticksInterface* opticks;
   	bool savePhotons;
+  	bool useTracks;
 	phot::PhotonVisibilityService const* fPhotonVisService = nullptr;
 	art::ServiceHandle<art::TFileService> fTFileService;
 
@@ -104,9 +107,11 @@ namespace laropticks {
   PDFullSimOpticks::PDFullSimOpticks(Parameters const& config) : art::EDProducer{config}
 											   ,fSimTag(config().SimulationLabel())
 											   ,opticks(nullptr)
-	                                           ,savePhotons(config().SavePhotons())
+												,savePhotons(config().SavePhotons())
+												,useTracks(config().UseTracks())
 {
     mf::LogInfo("PDFullSimOpticks") << "Initializing PDFullSimOpticks." << std::endl;
+
 
     // Initialize OpDetBacktrackerRecord
     produces<std::vector<sim::OpDetBacktrackerRecord>>();
@@ -118,7 +123,7 @@ namespace laropticks {
 	// Set Opticks Parameters
 	opticks->setSimTag(fSimTag.label());
 	opticks->setSavePhotons(savePhotons); // Saving photons produced during voxelization to an external file for testing.
-
+	opticks->setUseTracks(useTracks); // Using MCParticle list to produce tracks instead of SimEnergyDeposit list if true.
 	// Saving results to a common root file
 	opticks->setFileService(fTFileService.get());
   	if (fSimTag == "LightSource") fPhotonVisService = art::ServiceHandle<phot::PhotonVisibilityService const>().get();
@@ -131,13 +136,18 @@ namespace laropticks {
      mf::LogTrace("PDFullSimOpticks") << "PDFullSimOpticks Module Producer"
                               << "EventID: " << event.event();
 
+  	// Initialize some variables
+  	opticks->init(); // once
     art::Handle<std::vector<sim::SimEnergyDeposit>> edepHandle;
-    auto mcHandle = event.getValidHandle<std::vector<simb::MCParticle>>("largeant");
+  	if (useTracks || fSimTag == "LightSource")
+  	{
+  		auto mcHandle = event.getValidHandle<std::vector<simb::MCParticle>>("largeant");
+  		opticks->setParticleList(mcHandle); // per event
+  	}else opticks->setParticleList(nullptr); // per event
+
 	UPVecBTR result;
 
-	// Initialize some variables
-	opticks->init(); // once
-    opticks->setParticleList(mcHandle); // per event
+
 	opticks->setEventID(event.event()); // per event
 
 	// For IonAndScint Photon Production

@@ -51,7 +51,7 @@ namespace laropticks{
   }
 
   // Adjust this function
-  void OpticksInterface::CollectPhotons(G4Track *track,sim::SimEnergyDeposit edep){
+  void OpticksInterface::CollectPhotons(G4Track *track,const sim::SimEnergyDeposit &edep){
 	  // mf::LogInfo ("OpticksInterface) << "Collecting Photons .." << std::endl;
       // Example of getting material properties
 	  if(!track){
@@ -65,11 +65,22 @@ namespace laropticks{
   	  auto touch = new G4TouchableHistory();
 	  fTouchableHistories.push_back(touch);
 
+
       auto nav = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
 	  nav->LocateGlobalPointAndUpdateTouchable(G4ThreeVector(edep.MidPointX()*cm,edep.MidPointY()*cm,edep.MidPointZ()*cm), touch);
 
-	  G4Material * mat= G4Material::GetMaterial(touch->GetVolume()->GetLogicalVolume()->GetMaterial()->GetName());
+  	  if (!touch || !touch->GetVolume()) {
+		mf::LogInfo("OpticksInterface") << "Point outside world or invalid touchable" << std::endl;
+		return;
+     }
 
+	  //G4Material * mat= G4Material::GetMaterial(touch->GetVolume()->GetLogicalVolume()->GetMaterial()->GetName());
+	G4Material* mat = touch->GetVolume()->GetLogicalVolume()->GetMaterial();
+
+  	if (!mat) {
+    	mf::LogInfo("OpticksInterface") << "No material assigned to volume" << std::endl;
+    	return;
+	}
 	  auto pTable= mat->GetMaterialPropertiesTable();
 
 	  if(!pTable){
@@ -81,10 +92,7 @@ namespace laropticks{
 	  G4Step * astep = new G4Step();
 	  G4StepPoint * preStep = new G4StepPoint();
 	  G4StepPoint * postStep = new G4StepPoint();
-
-	  astep->SetPostStepPoint(postStep);
-	  astep->SetPreStepPoint(preStep);
-	  astep->SetStepLength(edep.StepLength()*cm);
+	  	
 	  preStep->SetPosition(startPoint);
 	  preStep->SetGlobalTime(edep.StartT()*ns);
 	  preStep->SetMaterial(mat);
@@ -95,16 +103,22 @@ namespace laropticks{
   	  postStep->SetMaterial(mat);
 	  postStep->SetVelocity(endPoint.mag()/(edep.EndT()*ns));
 
+	  astep->SetTrack(const_cast<G4Track*>(track));
+
+  	  astep->SetPostStepPoint(postStep);
+	  astep->SetPreStepPoint(preStep);
+  	  astep->SetStepLength(edep.StepLength()*cm);
       mf::LogTrace("OpticksInterface::CollectPhotons") << "Collecting Photons";
 	  // Version 10.6.1
   	#if G4VERSION_NUMBER < 1100
-
       U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumFPhotons(), 0, pTable->GetConstProperty(kFASTTIMECONSTANT),edep.TrackID());
       U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumSPhotons(), 1, pTable->GetConstProperty(kSLOWTIMECONSTANT),edep.TrackID());
   	  // Version 11.2
     #else
+
   	  U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumFPhotons(), 0, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT1),edep.TrackID());
       U4::CollectGenstep_DsG4Scintillation_r4695_LArSoft(track, astep, edep.NumSPhotons(), 1, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT2),edep.TrackID());
+
     #endif
 
   	  int CollectedPhotons=SEvt::GetNumPhotonCollected(0);
@@ -119,6 +133,66 @@ namespace laropticks{
 	  //fsteps.push_back(astep);
 	  fstepPoints.push_back(preStep);
 	  fstepPoints.push_back(postStep);
+}
+
+ // No Tracks needed for this
+  void OpticksInterface::CollectPhotons(const sim::SimEnergyDeposit &edep){
+	  // mf::LogInfo ("OpticksInterface) << "Collecting Photons .." << std::endl;
+      // Example of getting material properties
+
+	  G4ThreeVector startPoint=G4ThreeVector(edep.StartX()*cm,edep.StartY()*cm,edep.StartZ()*cm);
+	  G4ThreeVector endPoint=G4ThreeVector(edep.EndX()*cm,edep.EndY()*cm,edep.EndZ()*cm);
+
+  	  auto touch = new G4TouchableHistory();
+	  fTouchableHistories.push_back(touch);
+
+
+      auto nav = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
+	  nav->LocateGlobalPointAndUpdateTouchable(G4ThreeVector(edep.MidPointX()*cm,edep.MidPointY()*cm,edep.MidPointZ()*cm), touch);
+
+  	  if (!touch || !touch->GetVolume()) {
+		mf::LogInfo("OpticksInterface") << "Point outside world or invalid touchable" << std::endl;
+		return;
+     }
+
+	  //G4Material * mat= G4Material::GetMaterial(touch->GetVolume()->GetLogicalVolume()->GetMaterial()->GetName());
+	G4Material* mat = touch->GetVolume()->GetLogicalVolume()->GetMaterial();
+
+  	if (!mat) {
+    	mf::LogInfo("OpticksInterface") << "No material assigned to volume" << std::endl;
+    	return;
+	}
+	  auto pTable= mat->GetMaterialPropertiesTable();
+
+	  if(!pTable){
+			 mf::LogInfo ("OpticksInterface") << "Material Name " <<  mat->GetName() <<std::endl;
+			 mf::LogInfo ("OpticksInterface") << "Null Material Properties Table" << std::endl;
+			return;
+		}
+
+
+      mf::LogTrace("OpticksInterface::CollectPhotons") << "Collecting Photons";
+
+  	// Version 10.6.1
+  	#if G4VERSION_NUMBER < 1100
+  	  U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(),edep.NumFPhotons(), 0, pTable->GetConstProperty(kFASTTIMECONSTANT));
+  	  U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(), edep.NumSPhotons(),1, pTable->GetConstProperty(kSLOWTIMECONSTANT));
+  	  // Version 11.2
+    #else
+
+  	  U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(),edep.NumFPhotons(), 0, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT1));
+      U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(), edep.NumSPhotons(),1, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT2));
+    #endif
+
+  	  int CollectedPhotons = SEvt::GetNumPhotonCollected(0);
+      int maxPhoton = SEventConfig::MaxPhoton();
+
+      // Simulate in batch
+      if(CollectedPhotons>=maxPhoton) {
+		 mf::LogInfo ("OpticksInterface") << "Simulating in Batch Mode ...." << std::endl;
+			Simulate();
+	  }
+
 }
 
 
@@ -139,6 +213,7 @@ namespace laropticks{
       g4xc->reset(eventID);
 
   }
+
 
   void OpticksInterface::initPhotonDetectors(){
        mf::LogTrace("OpticksInterface::GetPhotonDetectors") << "Collecting PhotonDetectors From GDML";
@@ -320,7 +395,7 @@ namespace laropticks{
 	*/
     OpticksInterface::UPVecBTR OpticksInterface::executeEvent(VecSED const& edeps)
     {
-		if(Trackmps==nullptr) initTracks();
+		if(Trackmps==nullptr && (useTracks)) initTracks();
 		//mf::LogInfo ("OpticksInterface") << "OpticksInterface::executeEvent" << std::endl;
 
         //mf::LogTrace("OpticksInterface::executeEvent") << "Using Opticks tool";
@@ -328,13 +403,6 @@ namespace laropticks{
 
 
 		auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
-
-        int num_points = 0;
-        int num_fastph = 0;
-        int num_slowph = 0;
-        int num_fastdp = 0;
-        int num_slowdp = 0;
-
 
 
         mf::LogTrace("OpticksInterface::executeEvent")<< "Edep size " << edeps.size() << "\n";
@@ -353,40 +421,47 @@ namespace laropticks{
 	    fTouchableHistories.reserve(edeps.size());
 	    fstepPoints.reserve(2*edeps.size());  // 2x since we store preStep + postStep
 		double photonE=0;
-        for (auto const& edepi : edeps) {
-        	num_points++;
+  		int num_points=0;
+        for (auto const& edepi : edeps)
+        {
+	        num_points++;
         	nphot = nphot + edepi.NumPhotons();
 
-            if (!(num_points % 100000))
-			{
-			   mf::LogInfo ("OpticksInterface") <<" Opticks "
-                << "SimEnergyDeposit: " << num_points << " " << edepi.TrackID() << " " << edepi.Energy()
-                << "\nStart: " << edepi.Start() << "\nEnd: " << edepi.End()
-                << "\nNF: " << edepi.NumFPhotons() << "\nNS: " << edepi.NumSPhotons()
-                << "\nSYR: " << edepi.ScintYieldRatio()
-				<< "PDG: " << edepi.PdgCode()<<"\n" ;
-            }
-        	edepTrackID=edepi.TrackID();
-        	//if (edepTrackID<0) edepTrackID=edepi.TrackID()+fParticleList->size();
+        	if (!(num_points % 100000))
+        	{
+        		mf::LogInfo ("OpticksInterface") <<" Opticks "
+				 << "SimEnergyDeposit: " << num_points << " " << edepi.TrackID() << " " << edepi.Energy()
+				 << "\nStart: " << edepi.Start() << "\nEnd: " << edepi.End()
+				 << "\nNF: " << edepi.NumFPhotons() << "\nNS: " << edepi.NumSPhotons()
+				 << "\nSYR: " << edepi.ScintYieldRatio()
+				 << "PDG: " << edepi.PdgCode()<<"\n" ;
+        	}
 
-			if (tempTrackID != edepTrackID){
-				tempTrackID = edepTrackID;
-				auto it = Trackmps->find(std::abs(tempTrackID) );
-				if (it != Trackmps->end()){
-					aTrack = it->second;
-					 //mf::LogInfo ("OpticksInterface") << "TempTrack_ID " << tempTrackID << " pdg " <<edepi.PdgCode();
-				}
-				else {
-					 mf::LogInfo ("OpticksInterface::executeEvent")<<" No Track Found for TrkID " << tempTrackID << " PDG "  << edepi.PdgCode()<<std::endl;
-					continue;
-				}
-			}
+        	if (useTracks){
+        		edepTrackID=edepi.TrackID();
+        		//if (edepTrackID<0) edepTrackID=edepi.TrackID()+fParticleList->size();
+
+        		if (tempTrackID != edepTrackID){
+        			tempTrackID = edepTrackID;
+        			auto it = Trackmps->find(std::abs(tempTrackID) );
+        			if (it != Trackmps->end()){
+        				aTrack = it->second;
+        				//mf::LogInfo ("OpticksInterface") << "TempTrack_ID " << tempTrackID << " pdg " <<edepi.PdgCode();
+        			}
+        			else {
+        				mf::LogInfo ("OpticksInterface::executeEvent")<<" No Track Found for TrkID " << tempTrackID << " PDG "  << edepi.PdgCode()<<std::endl;
+        				continue;
+        			}
+        		}
+        		CollectPhotons(aTrack,edepi);
+			}else CollectPhotons(edepi);
+
         	if (IsSavePhotons())
         	{
         		G4LorentzVector ffpos = {edepi.StartX(),edepi.StartY(),edepi.StartZ()};
 				analysisManager->FillEdepTree (eventID, ffpos, edepi.TrackID(), edepi.PdgCode(), edepi.NumPhotons(),  edepi.NumElectrons());
         	}
-			CollectPhotons(aTrack,edepi);
+
 
         	//edeposit = edeposit + edepi.Energy();
         	//num_fastph +=edepi.NumFPhotons();
@@ -410,14 +485,16 @@ namespace laropticks{
 
 		} else  mf::LogInfo ("OpticksInterface") << "obtrHelper seems empty ...." << std::endl;
 
+		if (useTracks)
+		{
+			Trackmps->clear();
+			delete Trackmps;
+			Trackmps=nullptr;
 
-		Trackmps->clear();
-		delete Trackmps;
-		Trackmps=nullptr;
-
-  		// Release memory
-  		ReleaseMemory(fstepPoints,"StepPoints");
-  		ReleaseMemory(ftracks,"Tracks");
+			// Release memory
+			ReleaseMemory(fstepPoints,"StepPoints");
+			ReleaseMemory(ftracks,"Tracks");
+		}
   		ReleaseMemory(fTouchableHistories,"TouchableHistories");
 
   		mf::LogInfo ("OpticksInterface::executeEvent")<<" Total Photons " << nphot  <<std::endl;
@@ -574,6 +651,9 @@ namespace laropticks{
 	void OpticksInterface::setSavePhotons(bool ph_save) {
 		fph_save = ph_save;
 	}
+	void OpticksInterface::setUseTracks(bool bl) {
+  		useTracks = bl;
+   }
 	std::string OpticksInterface::GetSimTag() {
 		return ftag;
 	}
