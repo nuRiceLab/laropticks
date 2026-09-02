@@ -15,7 +15,47 @@ namespace laropticks{
 		hits.clear();
 		hits.shrink_to_fit();
   }
-  void OpticksHitHandler::CollectHits(int eventID,std::map<int, sim::OBTRHelper> &obtrHelpers) {
+	// For Primary Photon Generation
+	void OpticksHitHandler::CollectHits(int eventID,std::map<int, sim::OBTRHelper> &obtrHelpers)
+  {
+	  //Collecting Opticks Photons
+  	//mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::CollectHits] Collecting Hits from GPU ...." << std::endl;
+
+  	// --- Get Hits ----
+  	SEvt* sev             = SEvt::Get_EGPU();
+  	sphoton::Get(sphotons, sev->getHit());
+
+  	feventID=eventID;
+  	hits.reserve(sphotons.size());
+  	int ttime=0;
+  	for (auto & hit : sphotons) {
+  		OpticksHit ohit= OpticksHit();
+  		ohit.evtID=eventID;
+  		ohit.hit_id=hit.iindex();
+  		ohit.parent_id=hit.get_PId();
+  		ohit.sensor_id=hit.get_identity() - 1;
+  		double pos[3]={hit.pos.x  / cm ,hit.pos.y / cm, hit.pos.z / cm};
+  		ohit.x=pos[0];
+  		ohit.y=pos[1];
+  		ohit.z=pos[2];
+  		ohit.polx=hit.pol.x;
+  		ohit.poly=hit.pol.y;
+  		ohit.polz=hit.pol.z;
+  		ohit.momx=hit.mom.x;
+  		ohit.momy=hit.mom.y;
+  		ohit.momz=hit.mom.z;
+  		ohit.time=hit.time;
+  		ohit.boundary=hit.boundary();
+  		ohit.wavelength=hit.wavelength;
+  		hits.push_back(ohit);
+  		ttime=static_cast<int>(std::round(ohit.time));
+  		obtrHelpers.at(ohit.sensor_id).AddScintillationPhotonsToMap(ohit.parent_id, ttime, 1,  pos , hit.wavelength);
+  		// Increment Photon for Visibilities
+  		if(fSensorCounts.size()>0) fSensorCounts.at(ohit.sensor_id)+=1;
+
+  	}
+  }
+  void OpticksHitHandler::CollectHits(int eventID,std::map<int, sim::OBTRHelper> &obtrHelpers, std::map<int,OpticksBackTracker*> &OpticksBTRMap) {
 
       //Collecting Opticks Photons
   	  //mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::CollectHits] Collecting Hits from GPU ...." << std::endl;
@@ -27,12 +67,11 @@ namespace laropticks{
 	  feventID=eventID;
   	  hits.reserve(sphotons.size());
   	  int ttime=0;
-  	  double edep=0;
       for (auto & hit : sphotons) {
           OpticksHit ohit= OpticksHit();
           ohit.evtID=eventID;
           ohit.hit_id=hit.iindex();
-          ohit.parent_id=hit.get_PId();
+
           ohit.sensor_id=hit.get_identity() - 1;
       	  double pos[3]={hit.pos.x  / cm ,hit.pos.y / cm, hit.pos.z / cm};
           ohit.x=pos[0];
@@ -47,17 +86,19 @@ namespace laropticks{
           ohit.time=hit.time;
           ohit.boundary=hit.boundary();
           ohit.wavelength=hit.wavelength;
-          hits.push_back(ohit);
+
       	  ttime=static_cast<int>(std::round(ohit.time));
-      	  edep=9000*eV;
+      	  auto btr = OpticksBTRMap.find(hit.get_PId());
+      	   ohit.parent_id=btr->second->TrackID;
       	  //std::cout << "opChannel " << ohit.sensor_id << " time " << ttime << " parent Id " << ohit.parent_id << " edep " << edep<< std::endl ;
 		  // Add Scintillation Photons to Map
 
-		  obtrHelpers.at(ohit.sensor_id).AddScintillationPhotonsToMap(ohit.parent_id, ttime, 1, pos , edep);
+		  obtrHelpers.at(ohit.sensor_id).AddScintillationPhotonsToMap(btr->second->TrackID, ttime, 1,  btr->second->pos , btr->second->edep);
       	  //std::cout << "OBTR Helper Size " << obtrHelpers.at(ohit.sensor_id).timePDclockSDPsMap()[0] << std::endl;
           // Increment Photon for Visibilities
-          if(fSensorCounts.size()>0) fSensorCounts.at(ohit.sensor_id)+=1;
 
+          if(fSensorCounts.size()>0) fSensorCounts.at(ohit.sensor_id)+=1;
+          hits.push_back(ohit);
       }
 
 

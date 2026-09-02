@@ -143,6 +143,16 @@ class OpticksHitHandler;
 			 vec.clear();
 			 vec.shrink_to_fit();
 	  }
+     void ReleaseMemory(std::map<int, OpticksBackTracker*>& m, const std::string& msg) {
+      	if (m.empty()) return;
+      	std::cout << "Releasing memory for " << msg << std::endl;
+
+      	for (auto& [key, ptr] : m) {
+      		delete ptr;   // free each allocated OpticksBackTracker
+      	}
+      	m.clear();        // remove all entries
+      }
+
 
 	  private:
     	// Construct with fcl parameters
@@ -176,9 +186,9 @@ class OpticksHitHandler;
 	  bool fph_save;
       bool useTracks;
       art::TFileService *fTFileService;
-
+      int stepID;
       AnalysisManagerHelper  *analysisManager;
-
+	  std::map<int,OpticksBackTracker*> fOpticksBTRMap;
       PerformanceTime *pt;
    };
      inline void OpticksInterface::setFileService(art::TFileService * fs){

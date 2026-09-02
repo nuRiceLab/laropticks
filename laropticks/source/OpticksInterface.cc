@@ -2,6 +2,8 @@
 // LArSoft related
 #include "G4Version.hh"
 #include "laropticks/include/OpticksInterface.h"
+
+#include "../include/types.h"
 #include "laropticks/include/AnalysisManagerHelper.h"
 #include "laropticks/include/types.h"
 
@@ -174,15 +176,27 @@ namespace laropticks{
       mf::LogTrace("OpticksInterface::CollectPhotons") << "Collecting Photons";
 
   	// Version 10.6.1
+  	[[maybe_unused]] double fastTimeConstant=0;
+  	[[maybe_unused]] double slowTimeConstant=0;
+
   	#if G4VERSION_NUMBER < 1100
-  	  U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(),edep.NumFPhotons(), 0, pTable->GetConstProperty(kFASTTIMECONSTANT));
-  	  U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(), edep.NumSPhotons(),1, pTable->GetConstProperty(kSLOWTIMECONSTANT));
+  	  fastTimeConstant=pTable->GetConstProperty(kFASTTIMECONSTANT);
+	  slowTimeConstant=pTable->GetConstProperty(kSLOWTIMECONSTANT);
+  	  //U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(),edep.NumFPhotons(), 0, pTable->GetConstProperty(kFASTTIMECONSTANT));
+  	  //U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(), edep.NumSPhotons(),1, pTable->GetConstProperty(kSLOWTIMECONSTANT));
   	  // Version 11.2
     #else
+  	  fastTimeConstant=pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT1);
+  	  slowTimeConstant=pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT2);
 
-  	  U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(),edep.NumFPhotons(), 0, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT1));
-      U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(), edep.NumSPhotons(),1, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT2));
+  	  //U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(),edep.NumFPhotons(), 0, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT1));
+      //U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,0,edep.TrackID() ,edep.PdgCode(),mat->GetIndex(), edep.NumSPhotons(),1, pTable->GetConstProperty(kSCINTILLATIONTIMECONSTANT2));
     #endif
+
+  	// Collect Photon information
+  	U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,edep.TrackID(),stepID ,edep.PdgCode(),mat->GetIndex(),edep.NumFPhotons(), 0, fastTimeConstant);
+  	U4::CollectGenstep_DsG4Scintillation_r4695_LArSoftv2(startPoint, endPoint,edep.StartT()*ns,edep.EndT()*ns,edep.StepLength()*cm,edep.TrackID(),stepID ,edep.PdgCode(),mat->GetIndex(), edep.NumSPhotons(),1, slowTimeConstant);
+
 
   	  int CollectedPhotons = SEvt::GetNumPhotonCollected(0);
       int maxPhoton = SEventConfig::MaxPhoton();
@@ -206,7 +220,7 @@ namespace laropticks{
       cudaDeviceSynchronize();
   	  int hit_count = SEvt::GetNumHit(0);
       if(hit_count>0){
-          OpticksHits->CollectHits(eventID,obtrHelpers);
+          OpticksHits->CollectHits(eventID,obtrHelpers,fOpticksBTRMap);
       	  mf::LogInfo ("OpticksInterface") << "OpticksInterface::Simulate: "<< hit_count << " Hits" << std::endl;
       }else  mf::LogInfo ("OpticksInterface") << "OpticksInterface::Simulate: No Hits" << std::endl;
 	  //Event id needed here
@@ -408,7 +422,7 @@ namespace laropticks{
         mf::LogTrace("OpticksInterface::executeEvent")<< "Edep size " << edeps.size() << "\n";
 
   	    int nphot=0;
-  		double edeposit;
+
 
 		// Get The Parent Information
 		 mf::LogInfo ("OpticksInterface") << " Size of Energy Depositions " <<  edeps.size() ;
@@ -420,17 +434,17 @@ namespace laropticks{
 	    // Prevents O(n log n) behavior with dynamic vector resizing
 	    fTouchableHistories.reserve(edeps.size());
 	    fstepPoints.reserve(2*edeps.size());  // 2x since we store preStep + postStep
-		double photonE=0;
-  		int num_points=0;
+  		stepID=0;
+
         for (auto const& edepi : edeps)
         {
-	        num_points++;
+	        stepID++;
         	nphot = nphot + edepi.NumPhotons();
 
-        	if (!(num_points % 100000))
+        	if (!(stepID % 100000))
         	{
         		mf::LogInfo ("OpticksInterface") <<" Opticks "
-				 << "SimEnergyDeposit: " << num_points << " " << edepi.TrackID() << " " << edepi.Energy()
+				 << "SimEnergyDeposit: " << stepID << " " << edepi.TrackID() << " " << edepi.Energy()
 				 << "\nStart: " << edepi.Start() << "\nEnd: " << edepi.End()
 				 << "\nNF: " << edepi.NumFPhotons() << "\nNS: " << edepi.NumSPhotons()
 				 << "\nSYR: " << edepi.ScintYieldRatio()
@@ -462,15 +476,12 @@ namespace laropticks{
 				analysisManager->FillEdepTree (eventID, ffpos, edepi.TrackID(), edepi.PdgCode(), edepi.NumPhotons(),  edepi.NumElectrons());
         	}
 
+			// Collect the backtracker information for each energy deposition
+        	fOpticksBTRMap.emplace(stepID,new OpticksBackTracker{ edepi.TrackID(),
+																	  { edepi.MidPointX(), edepi.MidPointY(), edepi.MidPointZ() },
+        														      edepi.Energy() / edepi.NumPhotons() }
+			);
 
-        	//edeposit = edeposit + edepi.Energy();
-        	//num_fastph +=edepi.NumFPhotons();
-        	//num_slowph +=edepi.NumSPhotons();
-
-		    /*mf::LogTrace("OpticksInterface:executeEvent")
-		    << "Total points: " << num_points << ", total fast photons: " << num_fastph
-		    << ", total slow photons: " << num_slowph << "\ndetected fast photons: " << num_fastdp
-		    << ", detected slow photons: " << num_slowdp;*/
 		}
 
 		Simulate();
@@ -495,18 +506,19 @@ namespace laropticks{
 			ReleaseMemory(fstepPoints,"StepPoints");
 			ReleaseMemory(ftracks,"Tracks");
 		}
-  		ReleaseMemory(fTouchableHistories,"TouchableHistories");
 
+  		ReleaseMemory(fTouchableHistories,"TouchableHistories");
+		ReleaseMemory(fOpticksBTRMap,"OpticksBackTracker");
   		mf::LogInfo ("OpticksInterface::executeEvent")<<" Total Photons " << nphot  <<std::endl;
 		/*std::cout << " Printing the backtracker records for primary photons " << std::endl;
   	    for (auto &btr : *records.get()) {
-    	  for (auto const& [tick, sdps] : btr.timePDclockSDPsMap()) {
+    	    for (auto const& [tick, sdps] : btr.timePDclockSDPsMap()) {
         	    std::cout << "opDet=" << btr.OpDetNum()
                   << " tick=" << tick          // should be ~O(1000) ns, not 0
                   << " nSDPs=" << sdps.size() << "\n";
-    	  }
-	   }*/
-  	   pt->PhotonAmount=nphot;
+    	    }
+	    }*/
+  	    pt->PhotonAmount=nphot;
   		return records ;
 	}
 

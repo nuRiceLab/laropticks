@@ -64,6 +64,12 @@ namespace laropticks {
         int nphot;
         int nelect;
     };
+    struct OpticksBackTracker
+    {
+        int TrackID;
+        double pos[3];
+        double edep;
+    };
 }
 #endif //LAROPTICKS_TYPES_HH
 

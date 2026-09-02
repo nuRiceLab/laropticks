@@ -57,8 +57,8 @@ namespace laropticks {
                 instance = nullptr;
             }
         };
-
         void CollectHits(int eventID,std::map<int, sim::OBTRHelper> &obtrHelpers);
+        void CollectHits(int eventID,std::map<int, sim::OBTRHelper> &obtrHelpers,std::map<int,OpticksBackTracker*> &OpticksBTRMap);
 
         void AddHits();
         void SaveHits();
