@@ -38,6 +38,7 @@ find_package(larsim REQUIRED EXPORT)
 find_package(Range-v3 REQUIRED)
 ## Opticks package
 list(APPEND CMAKE_MODULE_PATH "$ENV{OPTICKS_HOME}/cmake/Modules")
+list(APPEND CMAKE_PREFIX_PATH "$ENV{OPTICKS_PREFIX}")
 set(OPTICKS_PREFIX "$ENV{OPTICKS_PREFIX}")
 #include(OpticksBuildOptions)
 find_dependency(PLog)
