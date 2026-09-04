@@ -72,7 +72,7 @@ namespace laropticks {
         OpticksHitHandler(){};
         ~OpticksHitHandler();
         static OpticksHitHandler * instance;
-        static G4Mutex mtx;
+        inline static G4Mutex mtx = G4MUTEX_INITIALIZER;
         std::vector<sphoton> sphotons;
         std::vector<laropticks::OpticksHit> hits;
 		G4TouchableHistory *fTouchableHistory;
