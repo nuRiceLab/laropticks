@@ -74,7 +74,7 @@ outputs:
   out1:
   {
     module_type: RootOutput
-    fileName:    "%Opticks_g4.root"
+    fileName:    "%ifb_Opticks_g4.root"
     dataTier:    "simulated"
     compressionLevel: 1
   }
