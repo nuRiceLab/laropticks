@@ -15,7 +15,7 @@ export OPTICKS_INTEGRATION_MODE=1  # Running both GPU and CPU simulation
 export OPTICKS_EVENT_MODE=Minimal  # Hits or Minimal Prefered. Hits will create .npy files in /tmp/user/opticks/GEOM/NEXUS_CRAB/nexus/ALL
 ### Opticks Detector Identification (Boundary Names for Identifying small number of detectors)
 ## Skipahead is used for offseting the random generator values so photons produce per event is not repeated
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 export OPTICKS_START_INDEX=0
 if [ -z ${SKIPAHEAD+x} ]; then
         echo " SKIPAHEAD is not set";
