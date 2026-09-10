@@ -89,14 +89,15 @@ class AnalysisManagerHelper
         void FillEdepTree(int &evtid, G4LorentzVector &pos, int trkid, int pdg, int nphot, int nelect);
         ~AnalysisManagerHelper();
     private:
-        AnalysisManagerHelper()
-        {
-             TTree * fVisTTree=nullptr;
-             TTree * fPhotonGenTTree=nullptr;
-             TTree * fOpticksHitTTree=nullptr;
-             TTree * fSimEdepGenTTree=nullptr;
-             TTree * fPerformanceTimeTTree=nullptr;
-        };
+        // NB: the previous body of this constructor declared LOCAL variables
+        // that shadowed the members of the same name:
+        //     AnalysisManagerHelper() { TTree * fOpticksHitTTree=nullptr; ... }
+        // Each line created a new local pointer, nulled it, and discarded it at
+        // the closing brace, leaving every TTree member uninitialised. The
+        // guard in FillHitTree ("if (fOpticksHitTTree != nullptr)") then passed
+        // on garbage and Fill() segfaulted. The members now carry default
+        // initialisers below, so the constructor has nothing left to do.
+        AnalysisManagerHelper() = default;
 
         static G4Mutex mtx;
         static AnalysisManagerHelper* instance;
@@ -104,11 +105,11 @@ class AnalysisManagerHelper
         G4double Duration{0};
         std::map<G4String,G4int> * fDetectIds{nullptr};
 
-        TTree * fVisTTree;
-        TTree * fPhotonGenTTree;
-        TTree * fOpticksHitTTree;
-        TTree * fSimEdepGenTTree;
-        TTree * fPerformanceTimeTTree;
+        TTree * fVisTTree{nullptr};
+        TTree * fPhotonGenTTree{nullptr};
+        TTree * fOpticksHitTTree{nullptr};
+        TTree * fSimEdepGenTTree{nullptr};
+        TTree * fPerformanceTimeTTree{nullptr};
 
         Visibility fVisibilityBranch;
         OpticksHit fOpticksHitBranch;
@@ -116,7 +117,7 @@ class AnalysisManagerHelper
         SimEdeps fSimEdepsGenBranch;
         PerformanceTime fPerformanceTimeBranch;
 
-        art::TFileService *fTFileService;
+        art::TFileService *fTFileService{nullptr};
   };
 
     inline void AnalysisManagerHelper::setFileService(art::TFileService * fs){
