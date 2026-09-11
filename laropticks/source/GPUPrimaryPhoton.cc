@@ -1,9 +1,12 @@
+
 #include "laropticks/include/GPUPrimaryPhoton.h"
 
 namespace laropticks
 {
-      GPUPrimaryPhoton * GPUPrimaryPhoton::instance = nullptr;
-
+	 thread_local GPUPrimaryPhoton PhotonGen;
+	  GPUPrimaryPhoton::GPUPrimaryPhoton(){
+			mf::LogInfo("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::GPUPrimaryPhoton] Creating GPUPrimaryPhoton instance" << std::endl;
+	  }
       GPUPrimaryPhoton::~GPUPrimaryPhoton(){
             mf::LogInfo("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::~GPUPrimaryPhoton] Destroying GPUPrimaryPhoton instance" << std::endl;
             reset();
@@ -40,8 +43,7 @@ namespace laropticks
 
            		  spht.ParentId=0;
 				  if(fsave_pht){
-				  		AnalysisManagerHelper * AnaMngr = AnalysisManagerHelper::getInstance();
-						AnaMngr->FillPhotonGenTree(eventID,pos,momunit,pol ,wavelength,energyEv);
+						anaHelper.FillPhotonGenTree(eventID,pos,momunit,pol ,wavelength,energyEv);
 				  }
 
                   photons.push_back(spht);
@@ -110,16 +112,15 @@ namespace laropticks
         //mf::LogTrace("GPUPrimaryPhoton::Simulate") << "Initiation of PrimaryPhoton Simulation Within GPU"<< std::endl;
        	G4CXOpticks * g4xc=G4CXOpticks::Get();
        	//Event id needed in here
-		OpticksHitHandler * OpticksHits = OpticksHitHandler::getInstance();
        	 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Simulate]: Simulating Photons Within GPU for EventID " << eventID << " ...."  << std::endl;
 		 mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Simulate]: Photons Collected = " << GetSPhotons().size() <<std::endl;
 		g4xc->simulate(eventID,0);
        	cudaDeviceSynchronize();
 
 		if(SEvt::GetNumHit(0)>0){
-			OpticksHits->setVoxelID(fVoxelID);
-			OpticksHits->AddPhotons(GetSPhotons().size()); // Get Photon Count;
-			OpticksHits->CollectHits(eventID,obtrHelpers);
+			OpticksHits.setVoxelID(fVoxelID);
+			OpticksHits.AddPhotons(GetSPhotons().size()); // Get Photon Count;
+			OpticksHits.CollectHits(eventID,obtrHelpers);
 
 		}
        	else  mf::LogInfo ("GPUPrimaryPhoton") << "[GPUPrimaryPhoton::Simulate]: No Hits" << std::endl;

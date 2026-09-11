@@ -6,6 +6,7 @@
  *  Date: 3/18/26
  *  Description: AnalysisManagerHelper: Helps with debugging and validation of PDFastSimOpticks
  */
+#pragma once
 // LArSoft
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
@@ -40,27 +41,6 @@ class AnalysisManagerHelper
 
     public:
 
-        //
-        static AnalysisManagerHelper* getInstance()
-        {
-            G4AutoLock lock(&mtx);
-            if(instance== nullptr)
-            {
-                instance = new AnalysisManagerHelper();
-
-            }
-            return instance;
-        }
-
-        static void deleteInstance()
-        {
-            G4AutoLock lock(&mtx);
-            if(instance != nullptr) {
-                delete instance;
-                instance = nullptr;
-            }
-        }
-
         G4int GetNumPhotons();
         G4double GetDuration();
         std::map<G4String,G4int> * GetDetectIds();
@@ -87,22 +67,14 @@ class AnalysisManagerHelper
         void FillPerformanceTree(PerformanceTime *per);
         void FillPhotonGenTree(int &evtid, G4LorentzVector &pos,G4ThreeVector &mom,G4ThreeVector &pol,double wavelength, double &energy);
         void FillEdepTree(int &evtid, G4LorentzVector &pos, int trkid, int pdg, int nphot, int nelect);
+        AnalysisManagerHelper();
         ~AnalysisManagerHelper();
     private:
-        AnalysisManagerHelper()
-        {
-             TTree * fVisTTree=nullptr;
-             TTree * fPhotonGenTTree=nullptr;
-             TTree * fOpticksHitTTree=nullptr;
-             TTree * fSimEdepGenTTree=nullptr;
-             TTree * fPerformanceTimeTTree=nullptr;
-        };
 
-        static G4Mutex mtx;
-        static AnalysisManagerHelper* instance;
-        G4int fAmountPhotons{0};
-        G4double Duration{0};
-        std::map<G4String,G4int> * fDetectIds{nullptr};
+
+        G4int fAmountPhotons;
+        G4double Duration;
+        std::map<G4String,G4int> * fDetectIds;
 
         TTree * fVisTTree;
         TTree * fPhotonGenTTree;
@@ -125,7 +97,6 @@ class AnalysisManagerHelper
      inline TTree * AnalysisManagerHelper::getOpticksHitTree(){
         return fOpticksHitTTree;
     }
-
-
+    extern thread_local AnalysisManagerHelper anaHelper;
 }
 #endif //GDMLOPTICKS_ANALYSISMANAGERHELPER_HH

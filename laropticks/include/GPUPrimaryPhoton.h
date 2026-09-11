@@ -6,7 +6,7 @@
  *  Date: 3/18/26
  *  Description: GPUPrimaryPhoton simulation: simulates photons within GPU by reading photons produced by largeant4
  */
-
+#pragma once
 #ifndef LAROPTICKS_GPUPRIMARYPHOTON_H
 #define LAROPTICKS_GPUPRIMARYPHOTON_H
 // CUDA
@@ -29,21 +29,6 @@ namespace laropticks {
     class GPUPrimaryPhoton
     {
         public:
-            static GPUPrimaryPhoton* getInstance(){
-
-                if(instance== nullptr){
-                    instance = new GPUPrimaryPhoton();
-                }
-                return instance;
-            };
-
-            static void deleteInstance(){
-                if(instance != nullptr){
-                    delete instance;
-                    instance = nullptr;
-                }
-            };
-
             void reset();
             void setEventID(int &id);
             std::vector<sphoton> GetSPhotons();
@@ -53,11 +38,10 @@ namespace laropticks {
             void Simulate();
             void setObtrHelpers(std::map<int, sim::OBTRHelper> &obtrHs);
 			void setVoxelID(int &id);
-
-        private:
-            GPUPrimaryPhoton(){};
+            GPUPrimaryPhoton();
             ~GPUPrimaryPhoton();
-            static GPUPrimaryPhoton * instance;
+        private:
+
             std::vector<sphoton> photons;
             int eventID;
             std::map<int, sim::OBTRHelper> obtrHelpers;
@@ -77,6 +61,7 @@ namespace laropticks {
     inline void GPUPrimaryPhoton::setObtrHelpers(std::map<int, sim::OBTRHelper> &obtrHs){
         obtrHelpers = obtrHs;
     }
+    extern thread_local GPUPrimaryPhoton PhotonGen;
 }
 
 

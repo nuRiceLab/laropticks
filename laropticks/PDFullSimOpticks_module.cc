@@ -92,7 +92,6 @@ namespace laropticks {
 
   private:
 	const art::InputTag fSimTag;
-    OpticksInterface* opticks;
   	bool savePhotons;
   	bool useTracks;
 	phot::PhotonVisibilityService const* fPhotonVisService = nullptr;
@@ -106,7 +105,6 @@ namespace laropticks {
    */
   PDFullSimOpticks::PDFullSimOpticks(Parameters const& config) : art::EDProducer{config}
 											   ,fSimTag(config().SimulationLabel())
-											   ,opticks(nullptr)
 												,savePhotons(config().SavePhotons())
 												,useTracks(config().UseTracks())
 {
@@ -117,15 +115,14 @@ namespace laropticks {
     produces<std::vector<sim::OpDetBacktrackerRecord>>();
 
 	std::cout << "PDFullSimOpticks constructed with SimulationLabel: " << fSimTag.label() << std::endl;
-    // Initialize Opticks
-    opticks=OpticksInterface::GetInstance();
+
 
 	// Set Opticks Parameters
-	opticks->setSimTag(fSimTag.label());
-	opticks->setSavePhotons(savePhotons); // Saving photons produced during voxelization to an external file for testing.
-	opticks->setUseTracks(useTracks); // Using MCParticle list to produce tracks instead of SimEnergyDeposit list if true.
+	opticks.setSimTag(fSimTag.label());
+	opticks.setSavePhotons(savePhotons); // Saving photons produced during voxelization to an external file for testing.
+	opticks.setUseTracks(useTracks); // Using MCParticle list to produce tracks instead of SimEnergyDeposit list if true.
 	// Saving results to a common root file
-	opticks->setFileService(fTFileService.get());
+	opticks.setFileService(fTFileService.get());
   	if (fSimTag == "LightSource") fPhotonVisService = art::ServiceHandle<phot::PhotonVisibilityService const>().get();
  }
   //......................................................................
@@ -137,21 +134,21 @@ namespace laropticks {
                               << "EventID: " << event.event();
 
   	// Initialize some variables
-  	opticks->init(); // once
+  	opticks.init(); // once
     art::Handle<std::vector<sim::SimEnergyDeposit>> edepHandle;
   	if (useTracks || fSimTag == "LightSource")
   	{
   		auto mcHandle = event.getValidHandle<std::vector<simb::MCParticle>>("largeant");
-  		opticks->setParticleList(mcHandle); // per event
-  	}else opticks->setParticleList(nullptr); // per event
+  		opticks.setParticleList(mcHandle); // per event
+  	}else opticks.setParticleList(nullptr); // per event
 
 	UPVecBTR result;
 
 
-	opticks->setEventID(event.event()); // per event
+	opticks.setEventID(event.event()); // per event
 
 	// For IonAndScint Photon Production
-    if (event.getByLabel(fSimTag, edepHandle)) result=opticks->executeEvent(*(edepHandle.product())); // Include energy deposits here
+    if (event.getByLabel(fSimTag, edepHandle)) result=opticks.executeEvent(*(edepHandle.product())); // Include energy deposits here
 
 
 	// Produce Photons Directly to Generate Visibility Maps
@@ -160,7 +157,7 @@ namespace laropticks {
 	    int VoxID;
         double NProd;
         fPhotonVisService->RetrieveLightProd(VoxID, NProd);
-		result=opticks->executeEvent(VoxID);
+		result=opticks.executeEvent(VoxID);
     }
 
 	// Copy the results
@@ -172,7 +169,7 @@ namespace laropticks {
 
   	auto end = std::chrono::high_resolution_clock::now();
     auto evtTime = std::chrono::duration<double>(end - start).count();
-	opticks->setDuration(evtTime); // Saving the event processing time for performance studies
+	opticks.setDuration(evtTime); // Saving the event processing time for performance studies
 	//mf::LogInfo("[ PDFullSimOpticks::EndEvent ]")  << "Event ID " <<  event.event() <<" processing time: " << evtTime << " seconds" << std::endl;
 
   }
@@ -184,14 +181,14 @@ void laropticks::PDFullSimOpticks::beginJob()
 {
 
   mf::LogTrace("PDFullSimOpticks") << "beginJob" << std::endl;
-  opticks->beginJob();
+  opticks.beginJob();
 }
 
 //--------------------End Job---------------------------------------------//
 void laropticks::PDFullSimOpticks::endJob()
 {
   mf::LogTrace("PDFullSimOpticks") << "endJob" << std::endl;
-  opticks->endJob();
+  opticks.endJob();
 
 }
 

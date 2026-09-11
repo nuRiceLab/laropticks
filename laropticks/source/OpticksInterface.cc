@@ -1,18 +1,26 @@
 
-// LArSoft related
+#include "../include/OpticksInterface.h"
+
 #include "G4Version.hh"
 #include "laropticks/include/OpticksInterface.h"
 
-#include "../include/types.h"
+#include "laropticks/include/types.h"
 #include "laropticks/include/AnalysisManagerHelper.h"
 #include "laropticks/include/types.h"
 
 using namespace xercesc;
 
 namespace laropticks{
-	OpticksInterface * OpticksInterface::instance = nullptr;
+	thread_local OpticksInterface opticks;
 
-// Initialize Opticks and Its Libraries
+	OpticksInterface::OpticksInterface()
+	{
+
+	}
+	OpticksInterface::~OpticksInterface(){
+	}
+
+	// Initialize Opticks and Its Libraries
   void OpticksInterface::init(){
 	  if(World) return; // return if world exist since no need to re-initilize
   	  // Initialize Opticks Logs for Information and Debugging
@@ -32,15 +40,14 @@ namespace laropticks{
 	  lvStore = G4LogicalVolumeStore::GetInstance();
 	  phyStore = G4PhysicalVolumeStore::GetInstance();
       // Get instances of tools that we need
-      OpticksHits = OpticksHitHandler::getInstance();
-	  PhotonGen= GPUPrimaryPhoton::getInstance();
+
 
       // Initialize
       initPhotonDetectors();
 	  if(DetectorIds.size()>0) {
         OpticksSensorIdentifier = new MySensorIdentifier(DetectorIds);
 
-        if(IsSavePhotons() && GetSimTag()=="LightSource") OpticksHits->initSensorCounts(DetectorIds);
+        if(IsSavePhotons() && GetSimTag()=="LightSource") OpticksHits.initSensorCounts(DetectorIds);
       }
 	  else throw cet::exception("DetectorIds") << "Missing DetectorIds";
 
@@ -220,7 +227,7 @@ namespace laropticks{
       cudaDeviceSynchronize();
   	  int hit_count = SEvt::GetNumHit(0);
       if(hit_count>0){
-          OpticksHits->CollectHits(eventID,obtrHelpers,fOpticksBTRMap);
+          OpticksHits.CollectHits(eventID,obtrHelpers,fOpticksBTRMap);
       	  mf::LogInfo ("OpticksInterface") << "OpticksInterface::Simulate: "<< hit_count << " Hits" << std::endl;
       }else  mf::LogInfo ("OpticksInterface") << "OpticksInterface::Simulate: No Hits" << std::endl;
 	  //Event id needed here
@@ -369,11 +376,8 @@ namespace laropticks{
 
 	    // Note: ftracks and fDynamicParticles are reserved in initTracks() with exact size
 		pt=new PerformanceTime();
-        OpticksSensorIdentifier=nullptr;
-		OpticksHits=nullptr;
 		DetectorIds={};
 	    Trackmps=nullptr;
-  		PhotonGen=nullptr;
 
   	}
 	//-------------------------------------------------------------------------//
@@ -386,17 +390,17 @@ namespace laropticks{
 
         auto records=std::make_unique<std::vector<sim::OpDetBacktrackerRecord>>();
         //double vx,vy,vz,px,py,pz,mx,my,mz, wavelength;
-		PhotonGen->setVoxelID(VoxelID);
-        PhotonGen->setEventID(eventID);
-        PhotonGen->setObtrHelpers(obtrHelpers);
-        PhotonGen->CollectPhotonInfo(fParticleList,fph_save);
-		PhotonGen->Batcher();
+		PhotonGen.setVoxelID(VoxelID);
+        PhotonGen.setEventID(eventID);
+        PhotonGen.setObtrHelpers(obtrHelpers);
+        PhotonGen.CollectPhotonInfo(fParticleList,fph_save);
+		PhotonGen.Batcher();
         if(obtrHelpers.size()>0){
 		for (auto& opbtr: obtrHelpers)
 			records->emplace_back(opbtr.second);
         	//std::cout < opbtr.second.OpDetNum() << " " << opbtr.second.timePDclockSDPsMap().size() << std::endl;
 		} else  mf::LogInfo ("OpticksInterface") << "obtrHelper seems empty ...." << std::endl;
-		PhotonGen->reset();
+		PhotonGen.reset();
   		pt->PhotonAmount=fParticleList->size();
 		return records;
 	}
@@ -473,7 +477,7 @@ namespace laropticks{
         	if (IsSavePhotons())
         	{
         		G4LorentzVector ffpos = {edepi.StartX(),edepi.StartY(),edepi.StartZ()};
-				analysisManager->FillEdepTree (eventID, ffpos, edepi.TrackID(), edepi.PdgCode(), edepi.NumPhotons(),  edepi.NumElectrons());
+				anaHelper.FillEdepTree (eventID, ffpos, edepi.TrackID(), edepi.PdgCode(), edepi.NumPhotons(),  edepi.NumElectrons());
         	}
 
 			// Collect the backtracker information for each energy deposition
@@ -550,8 +554,7 @@ namespace laropticks{
 			mf::LogInfo("OpticksInterface") << "Cleaned up OpticksSensorIdentifier" << std::endl;
 		}
   	  // Clean up singleton instances to prevent memory leaks
-      GPUPrimaryPhoton::deleteInstance();
-	  OpticksHitHandler::deleteInstance();
+
   	  delete pt;
 
     }
@@ -560,30 +563,29 @@ namespace laropticks{
 	void OpticksInterface::initFileManager() {
     	// Get the analysis manager
 
-     	analysisManager = AnalysisManagerHelper::getInstance();
-	    analysisManager->setFileService(fTFileService);
+	    anaHelper.setFileService(fTFileService);
 
 
 	    //Opticks Hits
   		if (IsSavePhotons())
   		{
-  			analysisManager->initOpticksHitTree();
+  			anaHelper.initOpticksHitTree();
   		}
 
   	    // Performance Tree
-		analysisManager->initPerformanceTimeTree();
+		anaHelper.initPerformanceTimeTree();
 
 
 		//Initial Particle Info
 		if(IsSavePhotons() && GetSimTag()=="LightSource"){
             // Initialize Photon Info
-            analysisManager->initPhotonGenTree();
+            anaHelper.initPhotonGenTree();
             // Estimating Visibilities for comparison with LightSource Module
-            analysisManager->initVoxelTree();
+            anaHelper.initVoxelTree();
 		}
   		else if (IsSavePhotons() && GetSimTag()=="IonAndScint" )
   		{
-  			analysisManager->initIonAndScintGenTree(); // Save edep info
+  			anaHelper.initIonAndScintGenTree(); // Save edep info
   		}
 
 }
@@ -674,12 +676,11 @@ namespace laropticks{
 		return fph_save;
 	}
 	void OpticksInterface::setDuration(double dr) {
-		auto ana=AnalysisManagerHelper::getInstance();
   		if (pt)
   		{
   			pt->evtID=eventID;
   		    pt->time=dr;
-  			ana->FillPerformanceTree(pt);
+  			anaHelper.FillPerformanceTree(pt);
   		}else {std::cout << "Performance Tree is not initialized! " << std::endl;}
 	}
 }

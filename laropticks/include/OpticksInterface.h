@@ -91,15 +91,10 @@ class OpticksHitHandler;
     class OpticksInterface  {
 
     public:
+      OpticksInterface();
+      ~OpticksInterface();
       using VecSED = std::vector<sim::SimEnergyDeposit>;
       using UPVecBTR = std::unique_ptr<std::vector<sim::OpDetBacktrackerRecord>>;
-
-      static OpticksInterface* GetInstance(){
-    	 if(instance== nullptr){
-    		instance = new OpticksInterface();
-    	 }
-    	 return instance;
-      }
 
       void init();
       void initPhotonDetectors();
@@ -156,11 +151,10 @@ class OpticksHitHandler;
 
 	  private:
     	// Construct with fcl parameters
-      OpticksInterface(){};
+
 
       std::string GDMLPath;
       MySensorIdentifier * OpticksSensorIdentifier;
-      OpticksHitHandler* OpticksHits;
       std::map<G4String, G4int>  DetectorIds;
 	  std::vector<simb::MCParticle> const * fParticleList ;
       std::unordered_map<int, const simb::MCParticle> fParticleMap;
@@ -181,19 +175,20 @@ class OpticksHitHandler;
 	  G4PhysicalVolumeStore* phyStore;
 	  G4LogicalVolumeStore* lvStore;
       static OpticksInterface* instance;
-	  GPUPrimaryPhoton * PhotonGen;
+
 	  std::string ftag;
 	  bool fph_save;
       bool useTracks;
       art::TFileService *fTFileService;
       int stepID;
-      AnalysisManagerHelper  *analysisManager;
+
 	  std::map<int,OpticksBackTracker*> fOpticksBTRMap;
       PerformanceTime *pt;
    };
      inline void OpticksInterface::setFileService(art::TFileService * fs){
       fTFileService=fs;
   }
+	extern thread_local OpticksInterface opticks;
 }
 
 #endif //OPTICKSINTERFACE_H

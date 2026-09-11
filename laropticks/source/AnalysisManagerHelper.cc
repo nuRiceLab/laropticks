@@ -5,17 +5,23 @@
 
 namespace laropticks {
 
-    // Initialize Static Member
-    AnalysisManagerHelper * AnalysisManagerHelper::instance = nullptr;
-    G4Mutex AnalysisManagerHelper::mtx;
-
-
-     AnalysisManagerHelper::~AnalysisManagerHelper()
+	thread_local AnalysisManagerHelper anaHelper;
+    AnalysisManagerHelper::AnalysisManagerHelper():
+		fAmountPhotons(0),
+		Duration(0),
+		fDetectIds(nullptr),
+		fVisTTree(nullptr),
+		fPhotonGenTTree(nullptr),
+		fOpticksHitTTree(nullptr),
+		fSimEdepGenTTree(nullptr),
+		fPerformanceTimeTTree(nullptr)
     {
-         if(fDetectIds != nullptr) {
-             delete fDetectIds;
-             fDetectIds = nullptr;
-        }
+
+    }
+
+    AnalysisManagerHelper::~AnalysisManagerHelper()
+    {
+
     }
 
     G4int AnalysisManagerHelper::GetNumPhotons(){

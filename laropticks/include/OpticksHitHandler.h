@@ -41,22 +41,8 @@ namespace laropticks {
   class OpticksHitHandler {
     public:
 
-        static OpticksHitHandler* getInstance(){
-            G4AutoLock lock(&mtx);
-            if(instance== nullptr){
-                instance = new OpticksHitHandler();
-            }
-            return instance;
-        };
-
-        static void deleteInstance()
-        {
-            G4AutoLock lock(&mtx);
-            if(instance != nullptr){
-                delete instance;
-                instance = nullptr;
-            }
-        };
+        OpticksHitHandler();
+        ~OpticksHitHandler();
         void CollectHits(int eventID,std::map<int, sim::OBTRHelper> &obtrHelpers);
         void CollectHits(int eventID,std::map<int, sim::OBTRHelper> &obtrHelpers,std::map<int,OpticksBackTracker*> &OpticksBTRMap);
 
@@ -69,17 +55,14 @@ namespace laropticks {
 		void setVoxelID(int &id);
 
     private:
-        OpticksHitHandler(){};
-        ~OpticksHitHandler();
-        static OpticksHitHandler * instance;
-        static G4Mutex mtx;
+
         std::vector<sphoton> sphotons;
         std::vector<laropticks::OpticksHit> hits;
 		G4TouchableHistory *fTouchableHistory;
 		int feventID;
-        int PhotonCount=0;
+        int PhotonCount;
         std::map<int,int> fSensorCounts;
-		int fVoxelID=0;
+		int fVoxelID;
 
   };
 
@@ -98,6 +81,7 @@ namespace laropticks {
        for (auto &it : DetectorIds)
             fSensorCounts.insert(std::pair<int,int>(it.second,0)); // Initialize
    }
+    extern thread_local OpticksHitHandler OpticksHits;
 }
 
 #endif //OPTICKS_OPTICKSHITHANDLER_HH

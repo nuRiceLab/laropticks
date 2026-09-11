@@ -1,13 +1,18 @@
 
+#include "../include/OpticksHitHandler.h"
 #include "laropticks/include/OpticksHitHandler.h"
 #include "laropticks/include/OpticksHitHandler.h"
 
 
 namespace laropticks{
-
+  thread_local OpticksHitHandler OpticksHits;
   // Opticks Hit Collection
   // Handles getting hits from opticks to a file
-  OpticksHitHandler * OpticksHitHandler::instance = nullptr;
+  OpticksHitHandler::OpticksHitHandler():feventID(0),PhotonCount(0),fVoxelID(0)
+  {
+
+  }
+
 
   OpticksHitHandler::~OpticksHitHandler(){
 		//mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::~OpticksHitHandler] Destroying OpticksHitHandler instance" << std::endl;
@@ -114,12 +119,11 @@ namespace laropticks{
 
   void OpticksHitHandler::SaveHits(){
 
-      AnalysisManagerHelper * anaHelper= AnalysisManagerHelper::getInstance();
-      if (anaHelper->getOpticksHitTree()!=nullptr)
+      if (anaHelper.getOpticksHitTree()!=nullptr)
       {
       	 // mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::SaveHits] Saving GPU Hits ..." << std::endl;
 	      for (auto it : hits){
-          	anaHelper->FillHitTree(it);
+          	anaHelper.FillHitTree(it);
       	 }
       }
 
@@ -134,7 +138,6 @@ namespace laropticks{
   void OpticksHitHandler::SaveVisibilities(){
 
 
-      AnalysisManagerHelper * anaHelper= AnalysisManagerHelper::getInstance();
   	 // mf::LogInfo("OpticksHitHandler") << "[OpticksHitHandler::SaveVisibilities] Saving GPU Visibilities ..." << std::endl;
 
       Visibility fvis;
@@ -148,11 +151,12 @@ namespace laropticks{
 		double vis = (double (it.second) / double(PhotonCount));
 
         fvis.Visibility= vis;
-		if(vis>0) anaHelper->FillVoxelTree(fvis);
+		if(vis>0) anaHelper.FillVoxelTree(fvis);
         // Reseting for Next Event
         it.second=0;
       }
        // Reset
        PhotonCount=0;
   }
+
 }
