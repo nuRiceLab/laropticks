@@ -258,7 +258,7 @@ namespace laropticks{
   	unsigned int nChannels = fGeom->NOpDets();
   	std::string volName,detName,CryoName;
 	int sid=0;
-  	int count=0;
+  	[[maybe_unused]] int count=0;
 
   	G4VPhysicalVolume * physv1=nullptr;
 	if(nChannels>0){
