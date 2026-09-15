@@ -89,14 +89,8 @@ class AnalysisManagerHelper
         void FillEdepTree(int &evtid, G4LorentzVector &pos, int trkid, int pdg, int nphot, int nelect);
         ~AnalysisManagerHelper();
     private:
-        AnalysisManagerHelper()
-        {
-             TTree * fVisTTree=nullptr;
-             TTree * fPhotonGenTTree=nullptr;
-             TTree * fOpticksHitTTree=nullptr;
-             TTree * fSimEdepGenTTree=nullptr;
-             TTree * fPerformanceTimeTTree=nullptr;
-        };
+        AnalysisManagerHelper():fVisTTree(nullptr),fPhotonGenTTree(nullptr),fOpticksHitTTree(nullptr),fSimEdepGenTTree(nullptr),fPerformanceTimeTTree(nullptr) {}
+
 
         static G4Mutex mtx;
         static AnalysisManagerHelper* instance;
