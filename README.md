@@ -33,7 +33,7 @@ Once inside the container, source the setup script to load the DUNE Spack enviro
 Apptainer> source /opt/setup.sh
 ```
 
-Run the command `OpticksExample` at any time to print a reminder of these execution steps.
+Run the command `OpticksExample` at any time to print a reminder of execution steps.
 ```bash
 OpticksExample
 ```
