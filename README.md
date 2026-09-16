@@ -39,5 +39,5 @@ lar -n 1 -c prodgenie_nu_dune10kt_1x2x6.fcl -o Genie.root
 
 Then load the Geni.root file to simulate optical photons
 ```bash
-lar -n 1 -c standard_opticks_dune10kt.fcl -s Genie.root -o opticks.root
+lar -n 1 -c standard_opticks_dunefd_1x2x6.fcl -s Genie.root -o opticks.root
 ```
