@@ -1,3 +1,18 @@
+#####################################################################################################################
+# This is a standard configuration file for running Opticks with LArG4, IonAndScint in the DUNE FD 1x2x6 geometry.
+# It expects a ROOT input file containing events from ParticleGenerators such as GENIE or MARLEY.
+#### Example usage:
+###### Generate events with GENIE and save them to Geni.root:
+######## lar -n 2 -c prodgenie_nu_dune10kt_1x2x6.fcl -o Geni.root
+######## Then run this configuration to simulate optical photons and save them to opticks.root:
+######## lar -n 2 -c standard_opticks_dunefd_1x2x6.fcl -s Geni.root -o opticks.root
+#### Also, if you already have a ROOT file with IonAndScint output:
+#### In this file, at line 65:
+#### Comment out   simulate: [ rns, largeant, IonAndScint, optical ]
+#### Uncomment     simulate: [ largeant, optical ]
+#### Run the last command above to simulate optical photons and save them to opticks.root.
+#####################################################################################################################
+
 #include "LArG4_dune.fcl"
 #include "IonAndScint_dune.fcl"
 #include "services_dune.fcl"
@@ -5,7 +20,7 @@
 
 
 
-process_name: G4
+process_name: G4IonScintOpticks
 
 
 services:
@@ -52,6 +67,7 @@ physics:
   #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
   simulate: [ rns, largeant, IonAndScint, optical ]
+  #simulate: [largeant, optical]
 
   #define the output stream, there could be more than one if using filters
   stream1:  [ out1 ]
