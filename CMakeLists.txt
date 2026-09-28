@@ -37,10 +37,9 @@ find_package(ROOT COMPONENTS Core EG GenVector Geom Gpad Hist MathCore Matrix Ph
 find_package(larsim REQUIRED EXPORT)
 find_package(Range-v3 REQUIRED)
 ## Opticks package
-list(APPEND CMAKE_MODULE_PATH "$ENV{OPTICKS_HOME}/cmake/Modules")
+list(APPEND CMAKE_MODULE_PATH "$ENV{OPTICKS_PREFIX}/cmake/Modules")
 set(OPTICKS_PREFIX "$ENV{OPTICKS_PREFIX}")
-#include(OpticksBuildOptions)
-find_dependency(PLog)
+include(OpticksBuildOptions)
 find_package(G4CX REQUIRED CONFIG)
 find_package(U4 REQUIRED CONFIG)
 
