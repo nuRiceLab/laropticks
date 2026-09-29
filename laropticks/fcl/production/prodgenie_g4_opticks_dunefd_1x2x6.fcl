@@ -1,0 +1,101 @@
+################################################################################
+# prodgenie_g4_opticks_dunefd_1x2x6.fcl
+#
+# Single art job: GENIE generation -> LArG4 -> IonAndScint -> Opticks optical
+# simulation for the DUNE FD horizontal-drift 1x2x6 geometry.
+#
+# Combines:
+#   dunesw:     fcl/dunefd/gen/genie/prodgenie_nu_dune10kt_1x2x6.fcl  (GenieGen)
+#                 -> prodgenie_nu_dune10kt.fcl -> prodgenie_common_dunefd.fcl
+#   laropticks: laropticks/fcl/standard_opticks_dunefd_1x2x6.fcl      (G4)
+#
+# NOTE: art allows exactly ONE process_name per job, so the GenieGen and G4
+# stages cannot keep separate process names inside a single fcl. All products
+# (generator, largeant, IonAndScint, optical) are written under process "G4",
+# i.e. the generator truth becomes generator::G4 instead of generator::GenieGen.
+# Module labels are unchanged, so downstream configs that select by label
+# (e.g. standard_detsim_opticks_dune10kt_1x2x6.fcl) work as before.
+################################################################################
+
+#include "services_dune.fcl"
+#include "genie_dune.fcl"
+#include "LArG4_dune.fcl"
+#include "IonAndScint_dune.fcl"
+#include "larproperties.fcl"
+
+process_name: G4
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService:          { fileName: "prodgenie_g4_opticks_hist.root" }
+  TimeTracker:           {}
+  MemoryTracker:         {} # default is one
+  RandomNumberGenerator: {} # ART native random number generator
+  FileCatalogMetadata:   @local::art_file_catalog_mc
+  IFDH:                  {} # needed by GENIE to fetch flux files
+
+  # Generation services (from prodgenie_nu_dune10kt_1x2x6.fcl)
+  @table::dunefd_1x2x6_services
+
+  # Simulation services (from standard_opticks_dunefd_1x2x6.fcl).
+  # Loaded last so G4 settings take precedence over any overlapping entries
+  # (e.g. LArPropertiesService -> dunefd_properties, NuRandomService, BackTracker).
+  @table::dunefd_1x2x6_simulation_services
+}
+
+# Start each new event with an empty event (generation step).
+source:
+{
+  module_type:     EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:       10        # Number of events to create
+  firstRun:        20000001  # 1x2x6 run number (from prodgenie_nu_dune10kt_1x2x6.fcl)
+  firstEvent:      1         # Number of first event in the file
+}
+
+physics:
+{
+  producers:
+  {
+    # --- GenieGen stage ---
+    generator:   @local::dune_fd_genie_nu_simple_flux_1x2x6_window
+
+    # --- G4 stage ---
+    largeant:    @local::dunefd_larg4
+    IonAndScint: @local::dunefd_ionandscint
+    optical:
+    {
+      module_type:     PDFullSimOpticks
+      SimulationLabel: "IonAndScint"
+      SavePrimary:     false
+      UseTracks:       false
+    }
+
+    rns:         { module_type: "RandomNumberSaver" }
+  }
+
+  # Order matters: generator must run before largeant.
+  simulate: [ rns, generator, largeant, IonAndScint, optical ]
+
+  # Output stream
+  stream1:  [ out1 ]
+
+  # trigger_paths: paths that modify the art::Event (filters and producers)
+  trigger_paths: [ simulate ]
+
+  # end_paths: paths that do not modify the art::Event (analyzers and outputs)
+  end_paths:     [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type:      RootOutput
+    fileName:         "prodgenie_nu_dune10kt_1x2x6_g4_opticks.root" # override with -o
+    dataTier:         "simulated"
+    compressionLevel: 1
+  }
+}
+
