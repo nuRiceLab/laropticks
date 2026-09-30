@@ -1,0 +1,13 @@
+#include "standard_detsim_dune10kt_1x2x6.fcl"
+physics.producers.opdigi.InputModules: ["optical"]
+#physics.producers.opdigi.InputModules: ["pdfastoptical"]
+#physics.producers.opdigi.PreTrigger: 1
+#physics.producers.opdigi.ReadoutWindow: 1000
+#physics.producers.opdigi.DarkNoiseRate: 0
+#physics.producers.opdigi.CrossTalk: 0
+#physics.producers.opdigi.DefaultSimWindow: false
+#physics.producers.opdigi.TimeEnd: 1000000
+
+physics.simulate: [ opdigi, rns ]
+#physics.producers.opdigi.InputModules: ["optical"]
+
