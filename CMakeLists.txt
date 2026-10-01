@@ -39,7 +39,6 @@ find_package(Range-v3 REQUIRED)
 ## Opticks package
 list(APPEND CMAKE_MODULE_PATH "$ENV{OPTICKS_PREFIX}/cmake/Modules")
 set(OPTICKS_PREFIX "$ENV{OPTICKS_PREFIX}")
-include(OpticksBuildOptions)
 find_package(G4CX REQUIRED CONFIG)
 find_package(U4 REQUIRED CONFIG)
 
