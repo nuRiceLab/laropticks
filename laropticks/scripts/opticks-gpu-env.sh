@@ -7,11 +7,7 @@
 #   source ~/opticks-gpu-env.sh
 #
 # It stages the geometry cache tarball from Scratch into node-local /tmp
-# (in-memory on Perlmutter, so 269k tiny files cost almost nothing), points
-# Opticks at it, and stops Opticks from rebuilding the cache.
-#
-# Container must be started with /pscratch bound:
-#   apptainer shell --nv --bind /cvmfs --bind $HOME --bind /pscratch <image>.sif
+# and stops Opticks from rebuilding the cache.
 #
 # Overrides, set before sourcing:
 #   OPTICKS_CACHE_TAR    tarball to stage        (default $PSCRATCH/$GEOM.tar)
