@@ -1,2 +1,1 @@
-* opticks-gpu-env.sh
-Example on how to cache geometry from /tmp 
+`opticks-gpu-env.sh`: example on how to cache geometry from /tmp 
