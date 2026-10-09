@@ -10,6 +10,7 @@
 #### In this file, at line 65:
 #### Comment out   simulate: [ rns, largeant, IonAndScint, optical ]
 #### Uncomment     simulate: [ largeant, optical ]
+#### Change the process_name: to G4Opticks
 #### Run the last command above to simulate optical photons and save them to opticks.root.
 #####################################################################################################################
 
